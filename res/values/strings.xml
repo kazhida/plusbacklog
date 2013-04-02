@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">+backlog</string>
+
+    <string name="summary">Summary</string>
+    <string name="description">Description</string>
+
+    <string name="menu_refresh">Refresh</string>
+    <string name="menu_search">Search</string>
+    <string name="menu_share">Share</string>
+</resources>

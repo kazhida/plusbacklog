@@ -1,0 +1,40 @@
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        >
+
+    <EditText
+            android:id="@+id/summary"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/summary"
+            />
+
+    <EditText
+            android:id="@+id/description"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:hint="@string/description"
+            android:gravity="top"
+            />
+
+    <Spinner
+            android:id="@+id/project"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            />
+
+    <Spinner
+            android:id="@+id/issue_type"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            />
+    <Spinner
+            android:id="@+id/priority"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            />
+</LinearLayout>
