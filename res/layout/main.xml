@@ -1,40 +1,128 @@
-<LinearLayout
+<RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         >
 
-    <EditText
-            android:id="@+id/summary"
+    <!-- メインパネル-->
+    <LinearLayout
+            android:id="@+id/main_panel"
+            android:orientation="vertical"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/summary"
-            />
+            android:layout_height="fill_parent"
+            android:layout_alignTop="true"
+            android:layout_alignBottom="true"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:paddingTop="8dp"
+            >
 
-    <EditText
-            android:id="@+id/description"
-            android:layout_width="fill_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:hint="@string/description"
-            android:gravity="top"
-            />
+        <EditText
+                android:id="@+id/summary"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/summary"
+                />
 
-    <Spinner
-            android:id="@+id/project"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            />
+        <EditText
+                android:id="@+id/description"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:hint="@string/description"
+                android:gravity="top"
+                />
 
-    <Spinner
-            android:id="@+id/issue_type"
+        <Spinner
+                android:id="@+id/project_spinner"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                />
+
+        <Spinner
+                android:id="@+id/issue_type_spinner"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                />
+        <Spinner
+                android:id="@+id/priority_spinner"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                />
+    </LinearLayout>
+
+    <!-- 設定パネル-->
+    <LinearLayout
+            android:id="@+id/config_panel"
+            android:orientation="vertical"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            />
-    <Spinner
-            android:id="@+id/priority"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            />
-</LinearLayout>
+            android:layout_height="fill_parent"
+            android:background="@color/bg_config"
+            android:layout_alignTop="true"
+            android:layout_alignBottom="true"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:paddingTop="8dp"
+            android:visibility="gone"
+            >
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                >
+
+            <EditText
+                    android:id="@+id/space_id"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/space_id"
+                    />
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="@string/backlog_domain"
+                    android:textSize="9pt"
+                    android:padding="8dp"
+                    android:gravity="bottom"
+                    />
+        </LinearLayout>
+
+        <EditText
+                android:id="@+id/user_id"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/user_id"
+                />
+
+        <EditText
+                android:id="@+id/password"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/password"
+                android:inputType="textPassword"
+                />
+
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                >
+            <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
+                    android:text="@string/need_register"
+                    android:textSize="6pt"
+                    android:padding="4dp"
+                    />
+            <Button
+                    android:id="@+id/save_config"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/register"
+                    />
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

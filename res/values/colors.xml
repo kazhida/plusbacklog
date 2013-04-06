@@ -1,3 +1,4 @@
 <resources>
     <color name="actionbar_title_color">#224894</color>
+    <color name="bg_config">#99cccccc</color>
 </resources>

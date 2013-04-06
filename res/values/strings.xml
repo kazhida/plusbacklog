@@ -3,6 +3,19 @@
 
     <string name="summary">Summary</string>
     <string name="description">Description</string>
+    <string name="space_id">Space-ID</string>
+    <string name="backlog_domain">.backlog.jp</string>
+    <string name="user_id">User-ID</string>
+    <string name="password">Password</string>
+    <string name="register">Register</string>
+    <string name="need_register">First, You need to register account information.</string>
+
+    <string name="config">Config</string>
+    <string name="post">Post</string>
+
+    <string name="priority_high">High</string>
+    <string name="priority_middle">Middle</string>
+    <string name="priority_low">Low</string>
 
     <string name="menu_refresh">Refresh</string>
     <string name="menu_search">Search</string>
