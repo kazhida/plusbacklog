@@ -1,12 +1,16 @@
 package com.abplus.plusbacklog;
 
 import android.os.Handler;
+import android.text.TextUtils;
+import android.util.Log;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 /**
@@ -20,6 +24,8 @@ public class BacklogIO {
     private String user_id;
     private String password;
     private Handler handler = new Handler();
+
+    private final String DEBUG_TAG = "+backlog.io";
 
     interface ResponseNotify {
         void success(int code, String response);
@@ -46,21 +52,34 @@ public class BacklogIO {
 //    }
 
     public void post(final String request, final ResponseNotify notify) {
-        final HttpPost req = new HttpPost("https://" + space_id + ".backlog.jp/XML-RPC");
+        final HttpPost httpPost = new HttpPost("https://" + space_id + ".backlog.jp/XML-RPC");
         final DefaultHttpClient http = new DefaultHttpClient();
 
+        httpPost.addHeader("Content-Type", "text/xml");
+
         http.getCredentialsProvider().setCredentials(
-                new AuthScope(req.getURI().getHost(), req.getURI().getPort()),
+                new AuthScope(httpPost.getURI().getHost(), httpPost.getURI().getPort()),
                 new UsernamePasswordCredentials(user_id, password)
         );
+
+        Log.d(DEBUG_TAG + ".request", request);
+
+//        if (request.contains("struct")) {
+//            notify.failed(400, "");
+//            return;
+//        }
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     Thread.sleep(10);   //ProgressDialogのために、ちょっとだけスリープ
-                    req.setEntity(new StringEntity(request));
-                    HttpResponse response = http.execute(req);
+                    httpPost.setEntity(new StringEntity(request, HTTP.UTF_8));
+                    HttpResponse response = http.execute(httpPost);
+
+                    for (Header header : response.getAllHeaders()) {
+                        Log.d(DEBUG_TAG + ".response_header", header.toString());
+                    }
 
                     final int code = response.getStatusLine().getStatusCode();
                     final String entity = EntityUtils.toString(response.getEntity());
@@ -113,13 +132,13 @@ public class BacklogIO {
 
         xml.append("<member>");
         xml.append("<name>summary</name>");
-        xml.append("<value><string>").append(summary).append("</string></value>");
+        xml.append("<value><string>").append(TextUtils.htmlEncode(summary)).append("</string></value>");
         xml.append("</member>");
 
         if (description != null && ! description.isEmpty()) {
             xml.append("<member>");
             xml.append("<name>description</name>");
-            xml.append("<value><string>").append(description).append("</string></value>");
+            xml.append("<value><string>").append(TextUtils.htmlEncode(description)).append("</string></value>");
             xml.append("</member>");
         }
 
@@ -133,6 +152,7 @@ public class BacklogIO {
         xml.append("<value><int>").append(priorityId).append("</int></value>");
         xml.append("</member>");
 
+        xml.append("</struct>");
         xml.append("</value>");
         xml.append("</param>");
         xml.append("</params>");

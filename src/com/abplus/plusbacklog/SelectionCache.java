@@ -318,12 +318,20 @@ public class SelectionCache {
 
         @Override
         public int getCount() {
-            return projects.size();
+            if (projects == null) {
+                return 0;
+            } else {
+                return projects.size();
+            }
         }
 
         @Override
         public Object getItem(int position) {
-            return projects.get(position);
+            if (projects == null) {
+                return null;
+            } else {
+                return projects.get(position);
+            }
         }
 
         @Override
@@ -379,12 +387,20 @@ public class SelectionCache {
 
         @Override
         public int getCount() {
-            return project.issueTypes.size();
+            if (project == null || project.issueTypes == null) {
+                return 0;
+            } else {
+                return project.issueTypes.size();
+            }
         }
 
         @Override
         public Object getItem(int position) {
-            return project.issueTypes.get(position);
+            if (project == null || project.issueTypes == null) {
+                return null;
+            } else {
+                return project.issueTypes.get(position);
+            }
         }
 
         @Override

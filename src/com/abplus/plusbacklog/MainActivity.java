@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.*;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.ScaleAnimation;
@@ -86,6 +87,7 @@ public class MainActivity extends Activity {
                         @Override
                         public void success(int code, String response) {
                             waitDialog.dismiss();
+                            Log.d("+backlog.post_issue", response);
                             showToast(R.string.registered_issue);
                         }
                         @Override
