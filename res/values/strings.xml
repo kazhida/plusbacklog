@@ -11,13 +11,18 @@
     <string name="need_register">First, You need to register account information.</string>
 
     <string name="config">Config</string>
+    <string name="reload">Reload</string>
     <string name="post">Post</string>
 
     <string name="priority_high">High</string>
     <string name="priority_middle">Middle</string>
     <string name="priority_low">Low</string>
 
-    <string name="menu_refresh">Refresh</string>
-    <string name="menu_search">Search</string>
-    <string name="menu_share">Share</string>
+    <string name="cant_load">Cannot load.</string>
+    <string name="cant_register">Cannot register.</string>
+    <string name="registered_issue">Registered an issue.</string>
+    <string name="sending">Sending…</string>
+
+    <string name="dummy_project_key">ABC1234</string>
+    <string name="dummy_project_name">Project 1234</string>
 </resources>

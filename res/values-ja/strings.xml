@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">+backlog</string>
+
+    <string name="summary">件名</string>
+    <string name="description">詳細</string>
+    <string name="space_id">Space-ID</string>
+    <string name="backlog_domain">.backlog.jp</string>
+    <string name="user_id">ユーザID</string>
+    <string name="password">パスワード</string>
+    <string name="register">登録</string>
+    <string name="need_register">最初に、アカウント情報を登録してください</string>
+
+    <string name="config">設定</string>
+    <string name="reload">リロード</string>
+    <string name="post">登録</string>
+
+    <string name="priority_high">高</string>
+    <string name="priority_middle">中</string>
+    <string name="priority_low">低</string>
+
+    <string name="cant_load">読み込めませんでした。</string>
+    <string name="cant_register">登録できませんでした</string>
+    <string name="registered_issue">課題を登録しました。</string>
+    <string name="sending">送信中…</string>
+
+    <string name="dummy_project_key">ABC1234</string>
+    <string name="dummy_project_name">Project 1234</string>
+</resources>

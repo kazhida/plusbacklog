@@ -1,5 +1,7 @@
 package com.abplus.plusbacklog;
 
+import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.*;
 import android.view.animation.AlphaAnimation;
@@ -12,10 +14,16 @@ import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
 
+    private BacklogIO                backlog = null;
     private SelectionCache           cache = null;
     private SelectionCache.Project   project = null;
     private SelectionCache.IssueType issueType = null;
     private PriorityAdapter.Priority priority = null;
+
+    private final String PREF_NAME    = "backlog_prefs";
+    private final String KEY_SPACE_ID = "space_id";
+    private final String KEY_USER_ID  = "user_id";
+    private final String KEY_PASSWORD = "password";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -24,7 +32,7 @@ public class MainActivity extends ActionBarActivity {
 
         setSpinnerListener(R.id.project_spinner, new ProjectSelectedLister());
         setSpinnerListener(R.id.issue_type_spinner, new IssueTypeSelectedListener());
-
+        setSpinnerListener(R.id.priority_spinner, new PrioritySelectedListener());
         setSpinnerAdapter(R.id.priority_spinner, new PriorityAdapter());
 
         findViewById(R.id.save_config).setOnClickListener(new SaveConfigListener());
@@ -34,10 +42,20 @@ public class MainActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
 
-        //todo:preferenceからアカウント情報を取り出してキャッシュを初期化
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        String space_id = prefs.getString(KEY_SPACE_ID, null);
+        String user_id = prefs.getString(KEY_USER_ID, null);
+        String password = prefs.getString(KEY_PASSWORD, null);
 
-        //  プロジェクトを読み込む
-        loadProjects();
+        if (space_id == null || user_id == null || password == null) {
+            showConfig();
+        } else {
+            //  プロジェクトを読み込む
+            setEntryText(R.id.space_id, space_id);
+            setEntryText(R.id.user_id, user_id);
+            setEntryText(R.id.password, password);
+            resetCache(space_id, user_id, password);
+        }
     }
 
     @Override
@@ -55,7 +73,33 @@ public class MainActivity extends ActionBarActivity {
                 showConfig();
                 return true;
             case R.id.menu_post:
-                //todo:バックログに送信
+                if (backlog != null) {
+                    String summary = getEntryText(R.id.summary);
+                    String description = getEntryText(R.id.description);
+                    final ProgressDialog waitDialog = new ProgressDialog(this);
+                    waitDialog.setMessage(getText(R.string.sending));
+                    waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    // プログレスダイアログを表示
+                    waitDialog.show();
+                    backlog.createIssue(summary, description,
+                            project.getId(), issueType.getId(), priority.getId(), new BacklogIO.ResponseNotify() {
+                        @Override
+                        public void success(int code, String response) {
+                            waitDialog.dismiss();
+                            showToast(R.string.registered_issue);
+                        }
+                        @Override
+                        public void failed(int code, String response) {
+                            waitDialog.dismiss();
+                            showToast("Error STATUS=" + code, Toast.LENGTH_LONG);
+                        }
+                        @Override
+                        public void error(Exception e) {
+                            waitDialog.dismiss();
+                            showToast("Error: " + e.getLocalizedMessage(), Toast.LENGTH_LONG);
+                        }
+                    });
+                }
                 return true;
         }
         return false;
@@ -65,12 +109,14 @@ public class MainActivity extends ActionBarActivity {
         //  2秒かけてぼや〜んとでる。
         View view = findViewById(R.id.config_panel);
         view.setVisibility(View.VISIBLE);
-        AlphaAnimation animation = new AlphaAnimation(1.0f, 0.0f);
+        AlphaAnimation animation = new AlphaAnimation(0.0f, 1.0f);
         animation.setDuration(2000);
         view.startAnimation(animation);
+        findViewById(R.id.main_panel).setVisibility(View.GONE);
     }
 
     private void showSpinner(int id) {
+        //  1秒かけてしゅかっとでる
         View view = findViewById(id);
         view.setVisibility(View.VISIBLE);
         ScaleAnimation animation = new ScaleAnimation(1.0f, 1.0f, 0.0f, 1.0f);
@@ -78,16 +124,40 @@ public class MainActivity extends ActionBarActivity {
         view.startAnimation(animation);
     }
 
+    private void showToast(String msg, int duration) {
+        Toast.makeText(this, msg, duration).show();
+    }
+
+    private void showToast(int msg_id, int duration) {
+        Toast.makeText(this, msg_id, duration).show();
+    }
+
+//    private void showToast(String msg) {
+//        showToast(msg, Toast.LENGTH_SHORT);
+//    }
+
+    private void showToast(int msg_id) {
+        showToast(msg_id, Toast.LENGTH_SHORT);
+    }
+
     private void loadProjects() {
         if (cache != null) {
             findViewById(R.id.project_spinner).setVisibility(View.GONE);
-            findViewById(R.id.issue_type_spinner).setVisibility(View.GONE);
-            findViewById(R.id.priority_spinner).setVisibility(View.GONE);
-            cache.loadProjects(new Runnable() {
+            findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
+            final ProgressDialog waitDialog = new ProgressDialog(this);
+            waitDialog.setMessage(getText(R.string.sending));
+            waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            cache.loadProjects(new SelectionCache.CacheNotify() {
                 @Override
-                public void run() {
+                public void success() {
+                    waitDialog.dismiss();
                     setSpinnerAdapter(R.id.project_spinner, cache.getProjectsAdapter());
                     showSpinner(R.id.project_spinner);
+                }
+                @Override
+                public void failed() {
+                    waitDialog.dismiss();
+                    showToast(R.string.cant_load);
                 }
             });
         }
@@ -95,29 +165,54 @@ public class MainActivity extends ActionBarActivity {
 
     private void loadIssueTypes() {
         if (cache != null && project != null) {
-            findViewById(R.id.issue_type_spinner).setVisibility(View.GONE);
-            findViewById(R.id.priority_spinner).setVisibility(View.GONE);
-            cache.loadIssueTypes(project, new Runnable() {
-                @Override
-                public void run() {
-                    setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project));
-                    showSpinner(R.id.issue_type_spinner);
-                }
-            });
+            if (project.hasCache()) {
+                findViewById(R.id.issue_attribute_panel).setVisibility(View.VISIBLE);
+                setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project));
+            } else {
+                findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
+                final ProgressDialog waitDialog = new ProgressDialog(this);
+                waitDialog.setMessage(getText(R.string.sending));
+                waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                cache.loadIssueTypes(project, new SelectionCache.CacheNotify() {
+                    @Override
+                    public void success() {
+                        waitDialog.dismiss();
+                        setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project));
+                        showSpinner(R.id.issue_attribute_panel);
+                    }
+                    @Override
+                    public void failed() {
+                        waitDialog.dismiss();
+                        showToast(R.string.cant_load);
+                    }
+                });
+            }
         }
     }
 
-    private void resetCache(SelectionCache newCache) {
-        if (newCache != null) {
-            cache = newCache;
-            project = null;
-            loadProjects();
-        }
+    private void resetCache(String space_id, String user_id, String password) {
+        backlog = new BacklogIO(space_id, user_id, password);
+        cache = new SelectionCache(this, backlog);
+        project = null;
+        loadProjects();
+    }
+
+    private String getEntryText(int id) {
+        EditText view = (EditText)findViewById(id);
+        return view.getText().toString();
+    }
+
+    private void setEntryText(int id, String text) {
+        EditText view = (EditText)findViewById(id);
+        view.setText(text);
     }
 
     private void setSpinnerAdapter(int spinner_id, BaseAdapter adapter) {
         Spinner spinner = (Spinner)findViewById(spinner_id);
         spinner.setAdapter(adapter);
+        if (! adapter.isEmpty()) {
+            spinner.setSelection(0);
+        }
     }
 
     private void setSpinnerListener(int spinner_id, AdapterView.OnItemSelectedListener listener) {
@@ -147,7 +242,16 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public void onClick(View v) {
             findViewById(R.id.config_panel).setVisibility(View.GONE);
-            resetCache(new SelectionCache(MainActivity.this, spaceId(), userId(), password()));
+            findViewById(R.id.main_panel).setVisibility(View.VISIBLE);
+
+            SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(KEY_SPACE_ID, spaceId());
+            editor.putString(KEY_USER_ID, userId());
+            editor.putString(KEY_PASSWORD, password());
+            editor.commit();
+
+            resetCache(spaceId(), userId(), password());
         }
     }
 
