@@ -1,4 +1,13 @@
-plusbacklog
+= +backlog
 ===========
 
-Client for backlog.jp
+backlog.jpのAPIを利用して、課題(Issue)を追加することに特化したクライアント
+
+入力できる情報は、
+* プロジェクト
+* 件名
+* 詳細
+* 種別
+* 優先度
+に、絞っている。
+
