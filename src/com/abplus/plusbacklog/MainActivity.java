@@ -1,5 +1,6 @@
 package com.abplus.plusbacklog;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -7,12 +8,11 @@ import android.view.*;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.ScaleAnimation;
 import android.widget.*;
-import com.example.android.actionbarcompat.ActionBarActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
 
     private BacklogIO                backlog = null;
     private SelectionCache           cache = null;
@@ -76,11 +76,7 @@ public class MainActivity extends ActionBarActivity {
                 if (backlog != null) {
                     String summary = getEntryText(R.id.summary);
                     String description = getEntryText(R.id.description);
-                    final ProgressDialog waitDialog = new ProgressDialog(this);
-                    waitDialog.setMessage(getText(R.string.sending));
-                    waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                    // プログレスダイアログを表示
-                    waitDialog.show();
+                    final ProgressDialog waitDialog = showWait(getString(R.string.sending));
                     backlog.createIssue(summary, description,
                             project.getId(), issueType.getId(), priority.getId(), new BacklogIO.ResponseNotify() {
                         @Override
@@ -91,12 +87,12 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void failed(int code, String response) {
                             waitDialog.dismiss();
-                            showToast("Error STATUS=" + code, Toast.LENGTH_LONG);
+                            showError(R.string.cant_register, "Error STATUS=" + code);
                         }
                         @Override
                         public void error(Exception e) {
                             waitDialog.dismiss();
-                            showToast("Error: " + e.getLocalizedMessage(), Toast.LENGTH_LONG);
+                            showError(R.string.cant_register, "Error: " + e.getLocalizedMessage());
                         }
                     });
                 }
@@ -106,21 +102,21 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void showConfig() {
-        //  2秒かけてぼや〜んとでる。
+        //  1秒かけてぼや〜んとでる。
         View view = findViewById(R.id.config_panel);
         view.setVisibility(View.VISIBLE);
         AlphaAnimation animation = new AlphaAnimation(0.0f, 1.0f);
-        animation.setDuration(2000);
+        animation.setDuration(1000);
         view.startAnimation(animation);
         findViewById(R.id.main_panel).setVisibility(View.GONE);
     }
 
     private void showSpinner(int id) {
-        //  1秒かけてしゅかっとでる
+        //  0.5秒かけてしゅかっとでる
         View view = findViewById(id);
         view.setVisibility(View.VISIBLE);
         ScaleAnimation animation = new ScaleAnimation(1.0f, 1.0f, 0.0f, 1.0f);
-        animation.setDuration(1000);
+        animation.setDuration(500);
         view.startAnimation(animation);
     }
 
@@ -140,24 +136,39 @@ public class MainActivity extends ActionBarActivity {
         showToast(msg_id, Toast.LENGTH_SHORT);
     }
 
+    private void showError(int msg_id, String msg) {
+        showToast(getString(msg_id) + "  " + msg, Toast.LENGTH_LONG);
+    }
+
+    private ProgressDialog showWait(String msg) {
+        ProgressDialog result = new ProgressDialog(this);
+        result.setMessage(msg);
+        result.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        result.show();
+        return result;
+    }
+
     private void loadProjects() {
         if (cache != null) {
             findViewById(R.id.project_spinner).setVisibility(View.GONE);
             findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
-            final ProgressDialog waitDialog = new ProgressDialog(this);
-            waitDialog.setMessage(getText(R.string.sending));
-            waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            cache.loadProjects(new SelectionCache.CacheNotify() {
+            final ProgressDialog waitDialog = showWait(getString(R.string.loading));
+            cache.loadProjects(new BacklogIO.ResponseNotify() {
                 @Override
-                public void success() {
+                public void success(int code, String response) {
                     waitDialog.dismiss();
                     setSpinnerAdapter(R.id.project_spinner, cache.getProjectsAdapter());
                     showSpinner(R.id.project_spinner);
                 }
                 @Override
-                public void failed() {
+                public void failed(int code, String response) {
                     waitDialog.dismiss();
-                    showToast(R.string.cant_load);
+                    showError(R.string.cant_load, "Error STATUS=" + code);
+                }
+                @Override
+                public void error(Exception e) {
+                    waitDialog.dismiss();
+                    showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
                 }
             });
         }
@@ -170,20 +181,23 @@ public class MainActivity extends ActionBarActivity {
                 setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project));
             } else {
                 findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
-                final ProgressDialog waitDialog = new ProgressDialog(this);
-                waitDialog.setMessage(getText(R.string.sending));
-                waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                cache.loadIssueTypes(project, new SelectionCache.CacheNotify() {
+                final ProgressDialog waitDialog = showWait(getString(R.string.loading));
+                cache.loadIssueTypes(project, new BacklogIO.ResponseNotify() {
                     @Override
-                    public void success() {
+                    public void success(int code, String response) {
                         waitDialog.dismiss();
                         setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project));
                         showSpinner(R.id.issue_attribute_panel);
                     }
                     @Override
-                    public void failed() {
+                    public void failed(int code, String response) {
                         waitDialog.dismiss();
-                        showToast(R.string.cant_load);
+                        showError(R.string.cant_load, "Error STATUS=" + code);
+                    }
+                    @Override
+                    public void error(Exception e) {
+                        waitDialog.dismiss();
+                        showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
                     }
                 });
             }

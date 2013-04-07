@@ -33,17 +33,17 @@ public class BacklogIO {
         this.password = password;
     }
 
-    public String getSpaceId() {
-        return space_id;
-    }
-
-    public String getUserId() {
-        return user_id;
-    }
-
-    public String getPassword() {
-        return password;
-    }
+//    public String getSpaceId() {
+//        return space_id;
+//    }
+//
+//    public String getUserId() {
+//        return user_id;
+//    }
+//
+//    public String getPassword() {
+//        return password;
+//    }
 
     public void post(final String request, final ResponseNotify notify) {
         final HttpPost req = new HttpPost("https://" + space_id + ".backlog.jp/XML-RPC");
@@ -58,6 +58,7 @@ public class BacklogIO {
             @Override
             public void run() {
                 try {
+                    Thread.sleep(10);   //ProgressDialogのために、ちょっとだけスリープ
                     req.setEntity(new StringEntity(request));
                     HttpResponse response = http.execute(req);
 

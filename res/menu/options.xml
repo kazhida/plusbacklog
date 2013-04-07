@@ -5,18 +5,19 @@
             android:title="@string/config"
             android:icon="@drawable/ic_action_setting"
             android:orderInCategory="0"
-            android:showAsAction="never"
+            android:showAsAction="ifRoom"
             />
 
     <item   android:id="@+id/menu_reload"
             android:title="@string/reload"
             android:icon="@drawable/ic_action_refresh"
             android:orderInCategory="1"
-            android:showAsAction="never"
+            android:showAsAction="ifRoom"
             />
 
     <item   android:id="@+id/menu_post"
             android:title="@string/post"
+            android:icon="@drawable/ic_action_save"
             android:orderInCategory="2"
             android:showAsAction="always"
             />

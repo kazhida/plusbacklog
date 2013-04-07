@@ -71,6 +71,7 @@
             android:paddingTop="8dp"
             android:visibility="gone"
             >
+
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
@@ -90,7 +91,6 @@
                     android:layout_height="match_parent"
                     android:text="@string/backlog_domain"
                     android:textSize="9pt"
-                    android:padding="8dp"
                     android:gravity="bottom"
                     />
         </LinearLayout>

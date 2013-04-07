@@ -1,6 +1,7 @@
 package com.abplus.plusbacklog;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.util.Log;
 import android.util.Xml;
 import android.view.LayoutInflater;
@@ -30,17 +31,12 @@ public class SelectionCache {
 
     private final String DEBUG_TAG = "+backlog.selection_cache";
 
-    interface CacheNotify {
-        void success();
-        void failed();
-    }
-
     public SelectionCache(Activity activity, BacklogIO io) {
         inflater = activity.getLayoutInflater();
         backlogIO = io;
     }
 
-    public void loadProjects(final CacheNotify notify) {
+    public void loadProjects(final BacklogIO.ResponseNotify notify) {
         final ProjectParser parser = new ProjectParser();
 
         backlogIO.loadProjects(new BacklogIO.ResponseNotify() {
@@ -49,27 +45,27 @@ public class SelectionCache {
                 try {
                     parser.parse(response);
                     projects = parser.getProjects();
-                    notify.success();
+                    notify.success(code, response);
                 } catch (XmlPullParserException e) {
-                    notify.failed();
+                    notify.error(e);
                 } catch (IOException e) {
-                    notify.failed();
+                    notify.error(e);
                 }
             }
 
             @Override
             public void failed(int code, String response) {
-                notify.failed();
+                notify.failed(code, response);
             }
 
             @Override
             public void error(Exception e) {
-                notify.failed();
+                notify.error(e);
             }
         });
     }
 
-    public void loadIssueTypes(final Project current, final CacheNotify notify) {
+    public void loadIssueTypes(final Project current, final BacklogIO.ResponseNotify notify) {
         final IssueTypeParser parser = new IssueTypeParser(current);
 
         backlogIO.loadIssueTypes(current.getId(), new BacklogIO.ResponseNotify() {
@@ -77,24 +73,24 @@ public class SelectionCache {
             public void success(int code, String response) {
                 try {
                     parser.parse(response);
-                    notify.success();
+                    notify.success(code, response);
                 } catch (XmlPullParserException e) {
                     current.issueTypes = null;
-                    notify.failed();
+                    notify.error(e);
                 } catch (IOException e) {
                     current.issueTypes = null;
-                    notify.failed();
+                    notify.error(e);
                 }
             }
 
             @Override
             public void failed(int code, String response) {
-                notify.failed();
+                notify.failed(code, response);
             }
 
             @Override
             public void error(Exception e) {
-                notify.failed();
+                notify.error(e);
             }
         });
     }
@@ -113,37 +109,35 @@ public class SelectionCache {
             XmlPullParser xpp = Xml.newPullParser();
             xpp.setInput(new StringReader(source));
 
-            int eventType = xpp.getEventType();
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_DOCUMENT) {
+            for (int et = xpp.getEventType(); et != XmlPullParser.END_DOCUMENT; et = xpp.next()) {
+                if (et == XmlPullParser.START_DOCUMENT) {
                     Log.d(DEBUG_TAG, "Document start.");
-                } else if (eventType == XmlPullParser.START_TAG) {
+                } else if (et == XmlPullParser.START_TAG) {
                     Log.d(DEBUG_TAG, "Start tag " + xpp.getName());
                     if (xpp.getName().equals("struct")) {
                         parseStruct(xpp);
                     }
-                } else if (eventType == XmlPullParser.END_TAG) {
+                } else if (et == XmlPullParser.END_TAG) {
                     Log.d(DEBUG_TAG, "End tag " + xpp.getName());
-                } else if (eventType == XmlPullParser.TEXT) {
+                } else if (et == XmlPullParser.TEXT) {
                     Log.d(DEBUG_TAG, "Text " + xpp.getText());
                 }
-                eventType = xpp.next();
             }
             Log.d(DEBUG_TAG, "Document end.");
         }
 
         void parseStruct(XmlPullParser xpp) throws IOException, XmlPullParserException {
-            int eventType = xpp.next();
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG) {
+
+            for (int et = xpp.next(); et != XmlPullParser.END_DOCUMENT; et = xpp.next()) {
+                if (et == XmlPullParser.START_TAG) {
                     Log.d(DEBUG_TAG + ".parseStruct", "Start tag " + xpp.getName());
                     if (xpp.getName().equals("member")) {
                         parseMember(xpp);
                     }
-                } else if (eventType == XmlPullParser.END_TAG) {
+                } else if (et == XmlPullParser.END_TAG) {
                     Log.d(DEBUG_TAG + ".parseStruct", "End tag " + xpp.getName());
                     if (xpp.getName().equals("struct")) break;
-                } else if (eventType == XmlPullParser.TEXT) {
+                } else if (et == XmlPullParser.TEXT) {
                     Log.d(DEBUG_TAG + ".parseStruct", "Text " + xpp.getText());
                 }
             }
@@ -153,18 +147,17 @@ public class SelectionCache {
             String tag = "";
             String name = null;
 
-            int eventType = xpp.next();
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG) {
+            for (int et = xpp.next(); et != XmlPullParser.END_DOCUMENT; et = xpp.next()) {
+                if (et == XmlPullParser.START_TAG) {
                     Log.d(DEBUG_TAG + ".parseMember", "Start tag " + xpp.getName());
                     tag = xpp.getName();
                     if (tag.equals("value")) {
                         parseValue(name, xpp);
                     }
-                } else if (eventType == XmlPullParser.END_TAG) {
+                } else if (et == XmlPullParser.END_TAG) {
                     Log.d(DEBUG_TAG + ".parseMember", "End tag " + xpp.getName());
                     if (xpp.getName().equals("member")) break;
-                } else if (eventType == XmlPullParser.TEXT) {
+                } else if (et == XmlPullParser.TEXT) {
                     Log.d(DEBUG_TAG + ".parseMember", "Text " + xpp.getText());
                     if (tag.equals("name")) {
                         name = xpp.getText();
@@ -190,14 +183,14 @@ public class SelectionCache {
 
         @Override
         void parseValue(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
-            int eventType = xpp.next();
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG) {
+
+            for (int et = xpp.next(); et != XmlPullParser.END_DOCUMENT; et = xpp.next()) {
+                if (et == XmlPullParser.START_TAG) {
                     Log.d(DEBUG_TAG + ".parseValue", "Start tag " + xpp.getName());
-                } else if (eventType == XmlPullParser.END_TAG) {
+                } else if (et == XmlPullParser.END_TAG) {
                     Log.d(DEBUG_TAG + ".parseValue", "End tag " + xpp.getName());
                     if (xpp.getName().equals("value")) break;
-                } else if (eventType == XmlPullParser.TEXT) {
+                } else if (et == XmlPullParser.TEXT) {
                     Log.d(DEBUG_TAG + ".parseValue", "Text " + xpp.getText());
                     if (project != null) {
                         if (name.equals("id")) {
@@ -246,14 +239,14 @@ public class SelectionCache {
 
         @Override
         void parseValue(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
-            int eventType = xpp.next();
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG) {
+
+            for (int et = xpp.next(); et != XmlPullParser.END_DOCUMENT; et = xpp.next()) {
+                if (et == XmlPullParser.START_TAG) {
                     Log.d(DEBUG_TAG + ".parseValue", "Start tag " + xpp.getName());
-                } else if (eventType == XmlPullParser.END_TAG) {
+                } else if (et == XmlPullParser.END_TAG) {
                     Log.d(DEBUG_TAG + ".parseValue", "End tag " + xpp.getName());
                     if (xpp.getName().equals("value")) break;
-                } else if (eventType == XmlPullParser.TEXT) {
+                } else if (et == XmlPullParser.TEXT) {
                     Log.d(DEBUG_TAG + ".parseValue", "Text " + xpp.getText());
                     if (project != null) {
                         if (name.equals("id")) {
@@ -269,7 +262,6 @@ public class SelectionCache {
         }
     }
 
-
     public class IssueType {
         private int id;
         private String name;
@@ -283,8 +275,9 @@ public class SelectionCache {
             return id;
         }
 
-        public String getColor() {
-            return color;
+        public int getColor() {
+            String c = color.substring(1, color.length());
+            return Integer.parseInt(c, 16) + 0xFF000000;
         }
     }
 
@@ -348,9 +341,24 @@ public class SelectionCache {
             Project project = projects.get(position);
             TextView keyView = (TextView)result.findViewById(R.id.project_key);
             TextView nameView = (TextView)result.findViewById(R.id.project_name);
+            TextView urlView = (TextView)result.findViewById(R.id.project_url);
 
             keyView.setText(project.getKey());
             nameView.setText(project.getName());
+
+            String url = project.getUrl();
+            if (url == null || url.isEmpty()) {
+                urlView.setVisibility(View.GONE);
+            } else {
+                urlView.setVisibility(View.VISIBLE);
+                urlView.setText(url);
+            }
+
+            if (project.isArchived()) {
+                keyView.setTextColor(Color.LTGRAY);
+            } else {
+                keyView.setTextColor(Color.BLACK);
+            }
 
             result.setTag(project);
 
@@ -391,6 +399,8 @@ public class SelectionCache {
             }
             IssueType issueType = project.issueTypes.get(position);
             result.setText(issueType.getName());
+            result.setBackgroundColor(issueType.getColor());
+            result.setTextColor(Color.WHITE);
             result.setTag(issueType);
 
             return result;
