@@ -350,8 +350,10 @@ public class SelectionCache {
             if (url == null || url.isEmpty()) {
                 urlView.setVisibility(View.GONE);
             } else {
-                urlView.setVisibility(View.VISIBLE);
+//                urlView.setVisibility(View.VISIBLE);
                 urlView.setText(url);
+                //  やっぱり不格好なので隠す
+                urlView.setVisibility(View.GONE);
             }
 
             if (project.isArchived()) {

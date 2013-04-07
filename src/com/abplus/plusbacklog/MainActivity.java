@@ -3,6 +3,7 @@ package com.abplus.plusbacklog;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.*;
 import android.view.animation.AlphaAnimation;
@@ -27,6 +28,9 @@ public class MainActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            setTheme(android.R.style.Theme_Holo_Light);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
@@ -99,6 +103,19 @@ public class MainActivity extends Activity {
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            View view = findViewById(R.id.config_panel);
+            if (view.getVisibility() == View.VISIBLE) {
+                view.setVisibility(View.GONE);
+                findViewById(R.id.main_panel).setVisibility(View.VISIBLE);
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     private void showConfig() {
@@ -225,7 +242,12 @@ public class MainActivity extends Activity {
         Spinner spinner = (Spinner)findViewById(spinner_id);
         spinner.setAdapter(adapter);
         if (! adapter.isEmpty()) {
-            spinner.setSelection(0);
+            if (spinner_id == R.id.priority_spinner) {
+                //  優先度はデフォルトで中
+                spinner.setSelection(1);
+            } else {
+                spinner.setSelection(0);
+            }
         }
     }
 

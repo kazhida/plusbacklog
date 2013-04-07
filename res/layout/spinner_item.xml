@@ -6,6 +6,7 @@
         android:text="@string/dummy_project_key"
         android:textSize="9pt"
         android:padding="8dp"
+        android:layout_margin="4dp"
         >
 
 </TextView>
