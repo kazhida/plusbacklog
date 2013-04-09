@@ -88,6 +88,8 @@ public class MainActivity extends Activity {
                         public void success(int code, String response) {
                             waitDialog.dismiss();
                             Log.d("+backlog.post_issue", response);
+                            setEntryText(R.id.summary, null);
+                            setEntryText(R.id.description, null);
                             showToast(R.string.registered_issue);
                         }
                         @Override
