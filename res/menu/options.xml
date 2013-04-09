@@ -5,14 +5,14 @@
             android:title="@string/config"
             android:icon="@drawable/ic_action_setting"
             android:orderInCategory="0"
-            android:showAsAction="ifRoom"
+            android:showAsAction="ifRoom|withText"
             />
 
     <item   android:id="@+id/menu_reload"
             android:title="@string/reload"
             android:icon="@drawable/ic_action_refresh"
             android:orderInCategory="1"
-            android:showAsAction="ifRoom"
+            android:showAsAction="ifRoom|withText"
             />
 
     <item   android:id="@+id/menu_post"

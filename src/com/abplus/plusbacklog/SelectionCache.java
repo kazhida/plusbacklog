@@ -95,12 +95,12 @@ public class SelectionCache {
         });
     }
 
-    public BaseAdapter getProjectsAdapter() {
+    public ProjectsAdapter getProjectsAdapter() {
         return new ProjectsAdapter();
     }
 
-    public BaseAdapter getIssueTypeAdapter(Project current) {
-        return new IssueTypeAdapter(current);
+    public IssueTypesAdapter getIssueTypeAdapter(Project current) {
+        return new IssueTypesAdapter(current);
     }
 
     private abstract class StructParser {
@@ -374,12 +374,23 @@ public class SelectionCache {
 
             return result;
         }
+
+        int keyIndexOf(String key) {
+            if (key == null) {
+                return -1;
+            } else {
+                for (int i = 0; i < projects.size(); i++) {
+                    if (key.equals(projects.get(i).getKey())) return i;
+                }
+                return -1;
+            }
+        }
     }
 
-    class IssueTypeAdapter extends BaseAdapter {
+    class IssueTypesAdapter extends BaseAdapter {
         private Project project;
 
-        IssueTypeAdapter(Project project) {
+        IssueTypesAdapter(Project project) {
             super();
 
             this.project = project;

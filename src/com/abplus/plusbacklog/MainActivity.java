@@ -21,16 +21,18 @@ public class MainActivity extends Activity {
     private SelectionCache.Project   project = null;
     private SelectionCache.IssueType issueType = null;
     private PriorityAdapter.Priority priority = null;
+    private String                   savedKey = null;
 
     private final String PREF_NAME    = "backlog_prefs";
     private final String KEY_SPACE_ID = "space_id";
     private final String KEY_USER_ID  = "user_id";
     private final String KEY_PASSWORD = "password";
+    private final String KEY_PROJECT  = "curr_project";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            setTheme(android.R.style.Theme_Holo_Light);
+            setTheme(R.style.app_theme);
         }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
@@ -38,7 +40,7 @@ public class MainActivity extends Activity {
         setSpinnerListener(R.id.project_spinner, new ProjectSelectedLister());
         setSpinnerListener(R.id.issue_type_spinner, new IssueTypeSelectedListener());
         setSpinnerListener(R.id.priority_spinner, new PrioritySelectedListener());
-        setSpinnerAdapter(R.id.priority_spinner, new PriorityAdapter());
+        setSpinnerAdapter(R.id.priority_spinner, new PriorityAdapter(), 1);
 
         findViewById(R.id.save_config).setOnClickListener(new SaveConfigListener());
     }
@@ -52,6 +54,8 @@ public class MainActivity extends Activity {
         String user_id = prefs.getString(KEY_USER_ID, null);
         String password = prefs.getString(KEY_PASSWORD, null);
 
+        savedKey = prefs.getString(KEY_PROJECT, null);
+
         if (space_id == null || user_id == null || password == null) {
             showConfig();
         } else {
@@ -60,6 +64,18 @@ public class MainActivity extends Activity {
             setEntryText(R.id.user_id, user_id);
             setEntryText(R.id.password, password);
             resetCache(space_id, user_id, password);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (project != null) {
+            SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(KEY_PROJECT, project.getKey());
+            editor.commit();
         }
     }
 
@@ -77,10 +93,15 @@ public class MainActivity extends Activity {
             case R.id.menu_config:
                 showConfig();
                 return true;
+            case R.id.menu_reload:
+                loadProjects();
+                return true;
             case R.id.menu_post:
-                if (backlog != null) {
-                    String summary = getEntryText(R.id.summary);
-                    String description = getEntryText(R.id.description);
+                String summary = getEntryText(R.id.summary);
+                String description = getEntryText(R.id.description);
+                if (summary == null || summary.isEmpty()) {
+                    showToast(R.string.summary_is_empty);
+                } else if (backlog != null) {
                     final ProgressDialog waitDialog = showWait(getString(R.string.sending));
                     backlog.createIssue(summary, description,
                             project.getId(), issueType.getId(), priority.getId(), new BacklogIO.ResponseNotify() {
@@ -133,11 +154,11 @@ public class MainActivity extends Activity {
     }
 
     private void showSpinner(int id) {
-        //  0.5秒かけてしゅかっとでる
+        //  0.2秒かけてしゅかっとでる
         View view = findViewById(id);
         view.setVisibility(View.VISIBLE);
         ScaleAnimation animation = new ScaleAnimation(1.0f, 1.0f, 0.0f, 1.0f);
-        animation.setDuration(500);
+        animation.setDuration(200);
         view.startAnimation(animation);
     }
 
@@ -171,6 +192,7 @@ public class MainActivity extends Activity {
 
     private void loadProjects() {
         if (cache != null) {
+            final String key = project != null ? project.getKey() : savedKey;
             findViewById(R.id.project_spinner).setVisibility(View.GONE);
             findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
             final ProgressDialog waitDialog = showWait(getString(R.string.loading));
@@ -178,7 +200,8 @@ public class MainActivity extends Activity {
                 @Override
                 public void success(int code, String response) {
                     waitDialog.dismiss();
-                    setSpinnerAdapter(R.id.project_spinner, cache.getProjectsAdapter());
+                    SelectionCache.ProjectsAdapter adapter = cache.getProjectsAdapter();
+                    setSpinnerAdapter(R.id.project_spinner, adapter, adapter.keyIndexOf(key));
                     showSpinner(R.id.project_spinner);
                 }
                 @Override
@@ -199,7 +222,7 @@ public class MainActivity extends Activity {
         if (cache != null && project != null) {
             if (project.hasCache()) {
                 findViewById(R.id.issue_attribute_panel).setVisibility(View.VISIBLE);
-                setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project));
+                setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project), 0);
             } else {
                 findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
                 final ProgressDialog waitDialog = showWait(getString(R.string.loading));
@@ -207,7 +230,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void success(int code, String response) {
                         waitDialog.dismiss();
-                        setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project));
+                        setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project), 0);
                         showSpinner(R.id.issue_attribute_panel);
                     }
                     @Override
@@ -242,16 +265,13 @@ public class MainActivity extends Activity {
         view.setText(text);
     }
 
-    private void setSpinnerAdapter(int spinner_id, BaseAdapter adapter) {
+    private void setSpinnerAdapter(int spinner_id, BaseAdapter adapter, int idx) {
         Spinner spinner = (Spinner)findViewById(spinner_id);
         spinner.setAdapter(adapter);
-        if (! adapter.isEmpty()) {
-            if (spinner_id == R.id.priority_spinner) {
-                //  優先度はデフォルトで中
-                spinner.setSelection(1);
-            } else {
-                spinner.setSelection(0);
-            }
+        if (adapter.getCount() > idx && idx >= 0) {
+            spinner.setSelection(idx);
+        } else if (! adapter.isEmpty()) {
+            spinner.setSelection(0);
         }
     }
 
@@ -360,11 +380,14 @@ public class MainActivity extends Activity {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             project = (SelectionCache.Project)view.getTag();
+            savedKey = project.getKey();
             loadIssueTypes();
         }
 
         @Override
         public void onNothingSelected(AdapterView<?> parent) {
+            savedKey = null;
+            project = null;
         }
     }
 
@@ -373,7 +396,6 @@ public class MainActivity extends Activity {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             issueType = (SelectionCache.IssueType)view.getTag();
-            showSpinner(R.id.priority_spinner);
         }
 
         @Override
