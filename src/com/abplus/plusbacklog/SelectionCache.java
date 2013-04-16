@@ -429,7 +429,7 @@ public class SelectionCache {
             IssueType issueType = project.issueTypes.get(position);
             result.setText(issueType.getName());
             result.setBackgroundColor(issueType.getColor());
-//            result.setTextColor(Color.WHITE);
+            result.setTextColor(Color.WHITE);
             result.setTag(issueType);
 
             return result;
