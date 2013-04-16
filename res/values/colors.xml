@@ -2,5 +2,5 @@
     <color name="bg_config">#99cccccc</color>
     <color name="active_project">#000000</color>
     <color name="archived_project">#cccccc</color>
-    <color name="bg_actionbar">#99ff99</color>
+    <color name="bg_actionbar">#009900</color>
 </resources>

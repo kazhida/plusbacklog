@@ -4,7 +4,7 @@
 
     <style
             name="app_theme"
-            parent="android:Theme.Holo.Light"
+            parent="android:Theme.Holo"
             >
         <item name="android:actionBarStyle">@style/app_actionbar</item>
     </style>

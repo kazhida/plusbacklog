@@ -364,11 +364,11 @@ public class SelectionCache {
                 urlView.setVisibility(View.GONE);
             }
 
-            if (project.isArchived()) {
-                keyView.setTextColor(Color.LTGRAY);
-            } else {
-                keyView.setTextColor(Color.BLACK);
-            }
+//            if (project.isArchived()) {
+//                keyView.setTextColor(Color.LTGRAY);
+//            } else {
+//                keyView.setTextColor(Color.BLACK);
+//            }
 
             result.setTag(project);
 
@@ -429,7 +429,7 @@ public class SelectionCache {
             IssueType issueType = project.issueTypes.get(position);
             result.setText(issueType.getName());
             result.setBackgroundColor(issueType.getColor());
-            result.setTextColor(Color.WHITE);
+//            result.setTextColor(Color.WHITE);
             result.setTag(issueType);
 
             return result;
