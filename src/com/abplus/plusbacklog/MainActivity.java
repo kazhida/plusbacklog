@@ -37,6 +37,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        findViewById(R.id.project_spinner).setVisibility(View.GONE);
+        findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
+
         setSpinnerListener(R.id.project_spinner, new ProjectSelectedLister());
         setSpinnerListener(R.id.issue_type_spinner, new IssueTypeSelectedListener());
         setSpinnerListener(R.id.priority_spinner, new PrioritySelectedListener());
@@ -58,7 +61,7 @@ public class MainActivity extends Activity {
 
         if (space_id == null || user_id == null || password == null) {
             showConfig();
-        } else {
+        } else if (findViewById(R.id.priority_spinner).getVisibility() == View.GONE) {
             //  プロジェクトを読み込む
             setEntryText(R.id.space_id, space_id);
             setEntryText(R.id.user_id, user_id);
