@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
 
         if (space_id == null || user_id == null || password == null) {
             showConfig();
-        } else if (findViewById(R.id.priority_spinner).getVisibility() == View.GONE) {
+        } else if (findViewById(R.id.project_spinner).getVisibility() == View.GONE) {
             //  プロジェクトを読み込む
             setEntryText(R.id.space_id, space_id);
             setEntryText(R.id.user_id, user_id);
