@@ -8,18 +8,18 @@
               android:layout_margin="2dp"
         >
     <TextView
-            android:id="@+id/project_key"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/dummy_project_key"
-            android:textSize="8pt"
-            />
-
-    <TextView
             android:id="@+id/project_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/dummy_project_name"
+            android:textSize="8pt"
+            />
+
+    <TextView
+            android:id="@+id/project_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/dummy_project_key"
             android:textSize="6pt"
             />
 
