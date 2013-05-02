@@ -107,6 +107,13 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public void onDestroy() {
+        if (adView != null) adView.destroy();
+        super.onDestroy();
+    }
+
+
+    @Override
     protected void onPause() {
         super.onPause();
 
