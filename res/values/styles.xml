@@ -4,16 +4,23 @@
 
     <style
             name="app_theme"
-            parent="android:Theme.Holo"
+            parent="android:Theme.Holo.Light"
             >
         <item name="android:actionBarStyle">@style/app_actionbar</item>
     </style>
 
     <style
             name="app_actionbar"
-            parent="@android:style/Widget.Holo.Light.ActionBar"
+            parent="android:style/Widget.Holo.ActionBar"
             >
         <item name="android:background">@color/bg_actionbar</item>
+        <item name="android:titleTextStyle">@style/app_actionbar_title</item>
+    </style>
+
+    <style
+            name="app_actionbar_title"
+            parent="android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/text_actionbar</item>
     </style>
 
 </resources>
