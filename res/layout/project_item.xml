@@ -4,15 +4,15 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:padding="8dp"
-              android:layout_margin="4dp"
+              android:padding="4dp"
+              android:layout_margin="2dp"
         >
     <TextView
             android:id="@+id/project_key"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/dummy_project_key"
-            android:textSize="9pt"
+            android:textSize="8pt"
             />
 
     <TextView

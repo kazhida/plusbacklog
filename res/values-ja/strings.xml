@@ -24,6 +24,7 @@
     <string name="sending">送信中…</string>
     <string name="loading">読込中…</string>
     <string name="summary_is_empty">件名は必須入力項目です。</string>
+    <string name="none">(カテゴリなし)</string>
 
     <string name="dummy_project_key">ABC1234</string>
     <string name="dummy_project_name">Project 1234</string>

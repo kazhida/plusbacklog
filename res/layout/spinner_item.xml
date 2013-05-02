@@ -4,9 +4,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/dummy_project_key"
-        android:textSize="9pt"
-        android:padding="8dp"
-        android:layout_margin="4dp"
-        >
-
-</TextView>
+        android:textSize="8pt"
+        android:padding="4dp"
+        android:layout_margin="2dp"
+        />

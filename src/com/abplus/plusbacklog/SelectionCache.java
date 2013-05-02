@@ -1,6 +1,7 @@
 package com.abplus.plusbacklog;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.util.Xml;
@@ -27,12 +28,14 @@ import java.util.List;
 public class SelectionCache {
     private BacklogIO backlogIO;
     private LayoutInflater inflater;
+    private Context context;
     private List<Project> projects = null;
 
     private final String DEBUG_TAG = "+backlog.selection_cache";
 
     public SelectionCache(Activity activity, BacklogIO io) {
         inflater = activity.getLayoutInflater();
+        context = activity;
         backlogIO = io;
     }
 
@@ -571,7 +574,7 @@ public class SelectionCache {
                 result = (TextView)inflater.inflate(R.layout.spinner_item, null);
             }
             if (position == 0) {
-                result.setText("");
+                result.setText(context.getText(R.string.none));
                 result.setTag(null);
             } else {
                 Component component = project.components.get(position - 1);
