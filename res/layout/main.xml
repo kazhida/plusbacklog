@@ -50,11 +50,21 @@
                     android:layout_height="wrap_content"
                     />
             <Spinner
+                    android:id="@+id/component_spinner"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    />
+            <Spinner
                     android:id="@+id/priority_spinner"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     />
         </LinearLayout>
+        <FrameLayout
+                android:id="@+id/ad_frame"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                />
     </LinearLayout>
 
     <!-- 設定パネル-->
@@ -131,7 +141,5 @@
                     />
         </LinearLayout>
     </LinearLayout>
-
-
 
 </RelativeLayout>

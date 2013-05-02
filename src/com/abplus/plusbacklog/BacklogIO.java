@@ -33,6 +33,10 @@ public class BacklogIO {
         void error(Exception e);
     }
 
+    interface IdHolder {
+        int getId();
+    }
+
     BacklogIO(String space_id, String user_id, String password) {
         this.space_id = space_id;
         this.user_id = user_id;
@@ -63,11 +67,6 @@ public class BacklogIO {
         );
 
         Log.d(DEBUG_TAG + ".request", request);
-
-//        if (request.contains("struct")) {
-//            notify.failed(400, "");
-//            return;
-//        }
 
         new Thread(new Runnable() {
             @Override
@@ -113,7 +112,7 @@ public class BacklogIO {
     }
 
     public void createIssue(String summary, String description,
-                            int projectId, int issueTypeId, int priorityId,
+                            IdHolder project, IdHolder issueType, IdHolder component, IdHolder priority,
                             ResponseNotify notify) {
         StringBuilder xml = new StringBuilder();
 
@@ -127,7 +126,7 @@ public class BacklogIO {
 
         xml.append("<member>");
         xml.append("<name>projectId</name>");
-        xml.append("<value><int>").append(projectId).append("</int></value>");
+        xml.append("<value><int>").append(project.getId()).append("</int></value>");
         xml.append("</member>");
 
         xml.append("<member>");
@@ -144,12 +143,19 @@ public class BacklogIO {
 
         xml.append("<member>");
         xml.append("<name>issueTypeId</name>");
-        xml.append("<value><int>").append(issueTypeId).append("</int></value>");
+        xml.append("<value><int>").append(issueType.getId()).append("</int></value>");
         xml.append("</member>");
+
+        if (component != null) {
+            xml.append("<member>");
+            xml.append("<name>component</name>");
+            xml.append("<value><int>").append(component.getId()).append("</int></value>");
+            xml.append("</member>");
+        }
 
         xml.append("<member>");
         xml.append("<name>priorityId</name>");
-        xml.append("<value><int>").append(priorityId).append("</int></value>");
+        xml.append("<value><int>").append(priority.getId()).append("</int></value>");
         xml.append("</member>");
 
         xml.append("</struct>");
@@ -179,6 +185,27 @@ public class BacklogIO {
         xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
         xml.append("<methodCall>");
         xml.append("<methodName>backlog.getIssueTypes</methodName>");
+        xml.append("<params>");
+        xml.append("<param>");
+        xml.append("<value>");
+        xml.append("<int>");
+        xml.append(projectId);
+        xml.append("</int>");
+        xml.append("");
+        xml.append("</value>");
+        xml.append("</param>");
+        xml.append("</params>");
+        xml.append("</methodCall>");
+
+        post(xml.toString(), notify);
+    }
+
+    public void loadComponents(int projectId, ResponseNotify notify) {
+        StringBuilder xml = new StringBuilder();
+
+        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        xml.append("<methodCall>");
+        xml.append("<methodName>backlog.getComponents</methodName>");
         xml.append("<params>");
         xml.append("<param>");
         xml.append("<value>");

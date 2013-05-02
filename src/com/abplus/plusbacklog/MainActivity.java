@@ -2,6 +2,7 @@ package com.abplus.plusbacklog;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,7 +10,11 @@ import android.util.Log;
 import android.view.*;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.ScaleAnimation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import com.google.ads.AdRequest;
+import com.google.ads.AdSize;
+import com.google.ads.AdView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +25,10 @@ public class MainActivity extends Activity {
     private SelectionCache           cache = null;
     private SelectionCache.Project   project = null;
     private SelectionCache.IssueType issueType = null;
+    private SelectionCache.Component component = null;
     private PriorityAdapter.Priority priority = null;
     private String                   savedKey = null;
+    private AdView                   adView = null;
 
     private final String PREF_NAME    = "backlog_prefs";
     private final String KEY_SPACE_ID = "space_id";
@@ -37,11 +44,14 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        adView = appendAdView();
+
         findViewById(R.id.project_spinner).setVisibility(View.GONE);
         findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
 
         setSpinnerListener(R.id.project_spinner, new ProjectSelectedLister());
         setSpinnerListener(R.id.issue_type_spinner, new IssueTypeSelectedListener());
+        setSpinnerListener(R.id.component_spinner, new ComponentSelectedListener());
         setSpinnerListener(R.id.priority_spinner, new PrioritySelectedListener());
         setSpinnerAdapter(R.id.priority_spinner, new PriorityAdapter(), 1);
 
@@ -68,6 +78,32 @@ public class MainActivity extends Activity {
             setEntryText(R.id.password, password);
             resetCache(space_id, user_id, password);
         }
+    }
+
+    /**
+     * 広告ビューを作って、アクティビティに追加する
+     */
+    private AdView appendAdView() {
+        AdView result = adView;
+
+        if (result == null) {
+            result = new AdView(this, AdSize.BANNER, getString(R.string.publisher_id));
+
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            result.setLayoutParams(params);
+
+            FrameLayout frame = (FrameLayout)findViewById(R.id.ad_frame);
+            frame.addView(result);
+
+            AdRequest adRequest = new AdRequest();
+
+            result.loadAd(adRequest);
+        }
+
+        return result;
     }
 
     @Override
@@ -107,7 +143,7 @@ public class MainActivity extends Activity {
                 } else if (backlog != null) {
                     final ProgressDialog waitDialog = showWait(getString(R.string.sending));
                     backlog.createIssue(summary, description,
-                            project.getId(), issueType.getId(), priority.getId(), new BacklogIO.ResponseNotify() {
+                            project, issueType, component, priority, new BacklogIO.ResponseNotify() {
                         @Override
                         public void success(int code, String response) {
                             waitDialog.dismiss();
@@ -221,29 +257,68 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void loadIssueTypes() {
+    private void loadAttributes() {
         if (cache != null && project != null) {
             if (project.hasCache()) {
                 findViewById(R.id.issue_attribute_panel).setVisibility(View.VISIBLE);
-                setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project), 0);
+                setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypesAdapter(project), 0);
             } else {
                 findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
                 final ProgressDialog waitDialog = showWait(getString(R.string.loading));
+                final boolean[] flags = new boolean[2];
+                flags[0] = false;
+                flags[1] = false;
                 cache.loadIssueTypes(project, new BacklogIO.ResponseNotify() {
                     @Override
                     public void success(int code, String response) {
-                        waitDialog.dismiss();
-                        setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypeAdapter(project), 0);
-                        showSpinner(R.id.issue_attribute_panel);
+                        flags[0] = true;
+                        setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypesAdapter(project), 0);
+                        if (flags[0] && flags[1]) {
+                            waitDialog.dismiss();
+                            showSpinner(R.id.issue_attribute_panel);
+                        }
                     }
                     @Override
                     public void failed(int code, String response) {
-                        waitDialog.dismiss();
+                        flags[0] = true;
+                        if (flags[0] && flags[1]) {
+                            waitDialog.dismiss();
+                        }
                         showError(R.string.cant_load, "Error STATUS=" + code);
                     }
                     @Override
                     public void error(Exception e) {
-                        waitDialog.dismiss();
+                        flags[0] = true;
+                        if (flags[0] && flags[1]) {
+                            waitDialog.dismiss();
+                        }
+                        showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
+                    }
+                });
+                cache.loadComponents(project, new BacklogIO.ResponseNotify() {
+                    @Override
+                    public void success(int code, String response) {
+                        flags[1] = true;
+                        setSpinnerAdapter(R.id.component_spinner, cache.getComponentsAdapter(project), 0);
+                        if (flags[0] && flags[1]) {
+                            waitDialog.dismiss();
+                            showSpinner(R.id.issue_attribute_panel);
+                        }
+                    }
+                    @Override
+                    public void failed(int code, String response) {
+                        flags[1] = true;
+                        if (flags[0] && flags[1]) {
+                            waitDialog.dismiss();
+                        }
+                        showError(R.string.cant_load, "Error STATUS=" + code);
+                    }
+                    @Override
+                    public void error(Exception e) {
+                        flags[1] = true;
+                        if (flags[0] && flags[1]) {
+                            waitDialog.dismiss();
+                        }
                         showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
                     }
                 });
@@ -304,6 +379,11 @@ public class MainActivity extends Activity {
 
         @Override
         public void onClick(View v) {
+            if (getCurrentFocus() != null) {
+                InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                manager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            }
+
             findViewById(R.id.config_panel).setVisibility(View.GONE);
             findViewById(R.id.main_panel).setVisibility(View.VISIBLE);
 
@@ -320,7 +400,7 @@ public class MainActivity extends Activity {
 
     private class PriorityAdapter extends BaseAdapter {
 
-        private class Priority {
+        private class Priority implements BacklogIO.IdHolder {
             int id;
             String name;
 
@@ -384,7 +464,7 @@ public class MainActivity extends Activity {
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             project = (SelectionCache.Project)view.getTag();
             savedKey = project.getKey();
-            loadIssueTypes();
+            loadAttributes();
         }
 
         @Override
@@ -399,6 +479,18 @@ public class MainActivity extends Activity {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             issueType = (SelectionCache.IssueType)view.getTag();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+        }
+    }
+
+    private class ComponentSelectedListener implements AdapterView.OnItemSelectedListener {
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            component = (SelectionCache.Component)view.getTag();
         }
 
         @Override

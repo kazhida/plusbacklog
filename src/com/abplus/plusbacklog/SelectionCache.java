@@ -95,12 +95,47 @@ public class SelectionCache {
         });
     }
 
+    public void loadComponents(final Project current, final BacklogIO.ResponseNotify notify) {
+        final ComponentParser parser = new ComponentParser(current);
+
+        backlogIO.loadComponents(current.getId(), new BacklogIO.ResponseNotify() {
+
+            @Override
+            public void success(int code, String response) {
+                try {
+                    parser.parse(response);
+                    notify.success(code, response);
+                } catch (XmlPullParserException e) {
+                    current.components = null;
+                    notify.error(e);
+                } catch (IOException e) {
+                    current.components = null;
+                    notify.error(e);
+                }
+            }
+
+            @Override
+            public void failed(int code, String response) {
+                notify.failed(code, response);
+            }
+
+            @Override
+            public void error(Exception e) {
+                notify.error(e);
+            }
+        });
+    }
+
     public ProjectsAdapter getProjectsAdapter() {
         return new ProjectsAdapter();
     }
 
-    public IssueTypesAdapter getIssueTypeAdapter(Project current) {
+    public BaseAdapter getIssueTypesAdapter(Project current) {
         return new IssueTypesAdapter(current);
+    }
+
+    public BaseAdapter getComponentsAdapter(Project current) {
+        return new ComponentsAdapter(current);
     }
 
     private abstract class StructParser {
@@ -169,6 +204,40 @@ public class SelectionCache {
         abstract void parseValue(String name, XmlPullParser xpp) throws IOException, XmlPullParserException;
     }
 
+    public class Project implements BacklogIO.IdHolder {
+        private int id;
+        private String name;
+        private String key;
+        private String url;
+        private boolean archived;
+        private List<IssueType> issueTypes = null;
+        private List<Component> components = null;
+
+        public int getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public boolean isArchived() {
+            return archived;
+        }
+
+        public boolean hasCache() {
+            return issueTypes != null;
+        }
+    }
+
     private class ProjectParser extends StructParser {
         List<Project> projects = new ArrayList<Project>();
         Project project = null;
@@ -214,107 +283,7 @@ public class SelectionCache {
         }
     }
 
-    private class IssueTypeParser extends StructParser {
-        Project project;
-        IssueType issueType = null;
-
-        IssueTypeParser(Project project) {
-            super();
-            this.project = project;
-        }
-
-        @Override
-        void parse(String source) throws XmlPullParserException, IOException {
-            project.issueTypes = new ArrayList<IssueType>();
-            super.parse(source);
-        }
-
-        @Override
-        void parseStruct(XmlPullParser xpp) throws IOException, XmlPullParserException {
-            issueType = new IssueType();
-            super.parseStruct(xpp);
-            project.issueTypes.add(issueType);
-            issueType = null;
-        }
-
-        @Override
-        void parseValue(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
-
-            for (int et = xpp.next(); et != XmlPullParser.END_DOCUMENT; et = xpp.next()) {
-                if (et == XmlPullParser.START_TAG) {
-                    Log.d(DEBUG_TAG + ".parseValue", "Start tag " + xpp.getName());
-                } else if (et == XmlPullParser.END_TAG) {
-                    Log.d(DEBUG_TAG + ".parseValue", "End tag " + xpp.getName());
-                    if (xpp.getName().equals("value")) break;
-                } else if (et == XmlPullParser.TEXT) {
-                    Log.d(DEBUG_TAG + ".parseValue", "Text " + xpp.getText());
-                    if (project != null) {
-                        if (name.equals("id")) {
-                            issueType.id = Integer.parseInt(xpp.getText());
-                        } else if (name.equals("name")) {
-                            issueType.name = xpp.getText();
-                        } else if (name.equals("color")) {
-                            issueType.color = xpp.getText();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public class IssueType {
-        private int id;
-        private String name;
-        private String color;
-
-        public String getName() {
-            return name;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public int getColor() {
-            String c = color.substring(1, color.length());
-            return Integer.parseInt(c, 16) + 0xFF000000;
-        }
-    }
-
-    public class Project {
-        private List<IssueType> issueTypes = null;
-        private int id;
-        private String name;
-        private String key;
-        private String url;
-        private boolean archived;
-
-        public int getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public boolean isArchived() {
-            return archived;
-        }
-
-        public boolean hasCache() {
-            return issueTypes != null;
-        }
-    }
-
-    class ProjectsAdapter extends BaseAdapter {
+    public class ProjectsAdapter extends BaseAdapter {
 
         @Override
         public int getCount() {
@@ -387,12 +356,78 @@ public class SelectionCache {
         }
     }
 
-    class IssueTypesAdapter extends BaseAdapter {
+    public class IssueType implements BacklogIO.IdHolder {
+        private int id;
+        private String name;
+        private String color;
+
+        public String getName() {
+            return name;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public int getColor() {
+            String c = color.substring(1, color.length());
+            return Integer.parseInt(c, 16) + 0xFF000000;
+        }
+    }
+
+    private class IssueTypeParser extends StructParser {
+        Project project;
+        IssueType issueType = null;
+
+        IssueTypeParser(Project project) {
+            super();
+            this.project = project;
+        }
+
+        @Override
+        void parse(String source) throws XmlPullParserException, IOException {
+            project.issueTypes = new ArrayList<IssueType>();
+            super.parse(source);
+        }
+
+        @Override
+        void parseStruct(XmlPullParser xpp) throws IOException, XmlPullParserException {
+            issueType = new IssueType();
+            super.parseStruct(xpp);
+            project.issueTypes.add(issueType);
+            issueType = null;
+        }
+
+        @Override
+        void parseValue(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
+
+            for (int et = xpp.next(); et != XmlPullParser.END_DOCUMENT; et = xpp.next()) {
+                if (et == XmlPullParser.START_TAG) {
+                    Log.d(DEBUG_TAG + ".parseValue", "Start tag " + xpp.getName());
+                } else if (et == XmlPullParser.END_TAG) {
+                    Log.d(DEBUG_TAG + ".parseValue", "End tag " + xpp.getName());
+                    if (xpp.getName().equals("value")) break;
+                } else if (et == XmlPullParser.TEXT) {
+                    Log.d(DEBUG_TAG + ".parseValue", "Text " + xpp.getText());
+                    if (project != null) {
+                        if (name.equals("id")) {
+                            issueType.id = Integer.parseInt(xpp.getText());
+                        } else if (name.equals("name")) {
+                            issueType.name = xpp.getText();
+                        } else if (name.equals("color")) {
+                            issueType.color = xpp.getText();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private class IssueTypesAdapter extends BaseAdapter {
         private Project project;
 
         IssueTypesAdapter(Project project) {
             super();
-
             this.project = project;
         }
 
@@ -431,6 +466,118 @@ public class SelectionCache {
             result.setBackgroundColor(issueType.getColor());
             result.setTextColor(Color.WHITE);
             result.setTag(issueType);
+
+            return result;
+        }
+    }
+
+    public class Component implements BacklogIO.IdHolder {
+        private int id;
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        public int getId() {
+            return id;
+        }
+    }
+
+    private class ComponentParser extends StructParser {
+        Project project;
+        Component component = null;
+
+        ComponentParser(Project project) {
+            super();
+            this.project = project;
+        }
+
+        @Override
+        void parse(String source) throws XmlPullParserException, IOException {
+            project.components = new ArrayList<Component>();
+            super.parse(source);
+        }
+
+        @Override
+        void parseStruct(XmlPullParser xpp) throws IOException, XmlPullParserException {
+            component = new Component();
+            super.parseStruct(xpp);
+            project.components.add(component);
+            component = null;
+        }
+
+        @Override
+        void parseValue(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
+
+            for (int et = xpp.next(); et != XmlPullParser.END_DOCUMENT; et = xpp.next()) {
+                if (et == XmlPullParser.START_TAG) {
+                    Log.d(DEBUG_TAG + ".parseValue", "Start tag " + xpp.getName());
+                } else if (et == XmlPullParser.END_TAG) {
+                    Log.d(DEBUG_TAG + ".parseValue", "End tag " + xpp.getName());
+                    if (xpp.getName().equals("value")) break;
+                } else if (et == XmlPullParser.TEXT) {
+                    Log.d(DEBUG_TAG + ".parseValue", "Text " + xpp.getText());
+                    if (project != null) {
+                        if (name.equals("id")) {
+                            component.id = Integer.parseInt(xpp.getText());
+                        } else if (name.equals("name")) {
+                            component.name = xpp.getText();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private class ComponentsAdapter extends BaseAdapter {
+        private Project project;
+
+        ComponentsAdapter(Project project) {
+            super();
+            this.project = project;
+        }
+
+        @Override
+        public int getCount() {
+            if (project == null || project.components == null) {
+                return 0;
+            } else {
+                return project.components.size() + 1;
+            }
+        }
+
+        @Override
+        public Object getItem(int position) {
+            if (project == null || project.components == null) {
+                return null;
+            } else if (position == 0) {
+                return null;
+            } else {
+                return project.components.get(position - 1);
+            }
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView result = (TextView)convertView;
+
+            if (result == null) {
+                result = (TextView)inflater.inflate(R.layout.spinner_item, null);
+            }
+            if (position == 0) {
+                result.setText("");
+                result.setTag(null);
+            } else {
+                Component component = project.components.get(position - 1);
+                result.setText(component.getName());
+                result.setTag(component);
+            }
 
             return result;
         }
