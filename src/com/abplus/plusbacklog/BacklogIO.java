@@ -43,18 +43,6 @@ public class BacklogIO {
         this.password = password;
     }
 
-//    public String getSpaceId() {
-//        return space_id;
-//    }
-//
-//    public String getUserId() {
-//        return user_id;
-//    }
-//
-//    public String getPassword() {
-//        return password;
-//    }
-
     public void post(final String request, final ResponseNotify notify) {
         final HttpPost httpPost = new HttpPost("https://" + space_id + ".backlog.jp/XML-RPC");
         final DefaultHttpClient http = new DefaultHttpClient();
@@ -191,7 +179,6 @@ public class BacklogIO {
         xml.append("<int>");
         xml.append(projectId);
         xml.append("</int>");
-        xml.append("");
         xml.append("</value>");
         xml.append("</param>");
         xml.append("</params>");
@@ -212,7 +199,6 @@ public class BacklogIO {
         xml.append("<int>");
         xml.append(projectId);
         xml.append("</int>");
-        xml.append("");
         xml.append("</value>");
         xml.append("</param>");
         xml.append("</params>");

@@ -40,11 +40,11 @@ public class SelectionCache {
     }
 
     public void loadProjects(final BacklogIO.ResponseNotify notify) {
-        final ProjectParser parser = new ProjectParser();
 
         backlogIO.loadProjects(new BacklogIO.ResponseNotify() {
             @Override
             public void success(int code, String response) {
+                ProjectParser parser = new ProjectParser();
                 try {
                     parser.parse(response);
                     projects = parser.getProjects();
@@ -69,12 +69,12 @@ public class SelectionCache {
     }
 
     public void loadIssueTypes(final Project current, final BacklogIO.ResponseNotify notify) {
-        final IssueTypeParser parser = new IssueTypeParser(current);
 
         backlogIO.loadIssueTypes(current.getId(), new BacklogIO.ResponseNotify() {
             @Override
             public void success(int code, String response) {
                 try {
+                    IssueTypeParser parser = new IssueTypeParser(current);
                     parser.parse(response);
                     notify.success(code, response);
                 } catch (XmlPullParserException e) {
@@ -99,12 +99,12 @@ public class SelectionCache {
     }
 
     public void loadComponents(final Project current, final BacklogIO.ResponseNotify notify) {
-        final ComponentParser parser = new ComponentParser(current);
 
         backlogIO.loadComponents(current.getId(), new BacklogIO.ResponseNotify() {
 
             @Override
             public void success(int code, String response) {
+                ComponentParser parser = new ComponentParser(current);
                 try {
                     parser.parse(response);
                     notify.success(code, response);
