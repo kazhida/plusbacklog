@@ -41,7 +41,7 @@ public class SelectionCache {
 
     public void loadProjects(final BacklogIO.ResponseNotify notify) {
 
-        backlogIO.loadProjects(new BacklogIO.ResponseNotify() {
+        backlogIO.getProjects(new BacklogIO.ResponseNotify() {
             @Override
             public void success(int code, String response) {
                 ProjectParser parser = new ProjectParser();
@@ -70,7 +70,7 @@ public class SelectionCache {
 
     public void loadIssueTypes(final Project current, final BacklogIO.ResponseNotify notify) {
 
-        backlogIO.loadIssueTypes(current.getId(), new BacklogIO.ResponseNotify() {
+        backlogIO.getIssueTypes(current.getId(), new BacklogIO.ResponseNotify() {
             @Override
             public void success(int code, String response) {
                 try {
@@ -100,7 +100,7 @@ public class SelectionCache {
 
     public void loadComponents(final Project current, final BacklogIO.ResponseNotify notify) {
 
-        backlogIO.loadComponents(current.getId(), new BacklogIO.ResponseNotify() {
+        backlogIO.getComponents(current.getId(), new BacklogIO.ResponseNotify() {
 
             @Override
             public void success(int code, String response) {

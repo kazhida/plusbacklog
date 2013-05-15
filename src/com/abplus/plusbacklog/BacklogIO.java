@@ -33,14 +33,35 @@ public class BacklogIO {
         void error(Exception e);
     }
 
-    interface IdHolder {
+    public interface IdHolder {
         int getId();
     }
+
+    public interface KeyHolder {
+        String getKey();
+    }
+
+    public interface NameHolder {
+        String getName();
+    }
+
 
     BacklogIO(String space_id, String user_id, String password) {
         this.space_id = space_id;
         this.user_id = user_id;
         this.password = password;
+    }
+
+    public String getSpaceId() {
+        return space_id;
+    }
+
+    public String getUserId() {
+        return user_id;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public void post(final String request, final ResponseNotify notify) {
@@ -155,7 +176,7 @@ public class BacklogIO {
         post(xml.toString(), notify);
     }
 
-    public void loadProjects(ResponseNotify notify) {
+    public void getProjects(ResponseNotify notify) {
         StringBuilder xml = new StringBuilder();
 
         xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -167,7 +188,7 @@ public class BacklogIO {
         post(xml.toString(), notify);
     }
 
-    public void loadIssueTypes(int projectId, ResponseNotify notify) {
+    public void getIssueTypes(int projectId, ResponseNotify notify) {
         StringBuilder xml = new StringBuilder();
 
         xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -187,7 +208,7 @@ public class BacklogIO {
         post(xml.toString(), notify);
     }
 
-    public void loadComponents(int projectId, ResponseNotify notify) {
+    public void getComponents(int projectId, ResponseNotify notify) {
         StringBuilder xml = new StringBuilder();
 
         xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -199,6 +220,26 @@ public class BacklogIO {
         xml.append("<int>");
         xml.append(projectId);
         xml.append("</int>");
+        xml.append("</value>");
+        xml.append("</param>");
+        xml.append("</params>");
+        xml.append("</methodCall>");
+
+        post(xml.toString(), notify);
+    }
+
+    public void getUserIcon(String userId, ResponseNotify notify) {
+        StringBuilder xml = new StringBuilder();
+
+        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        xml.append("<methodCall>");
+        xml.append("<methodName>backlog.getUserIcon</methodName>");
+        xml.append("<params>");
+        xml.append("<param>");
+        xml.append("<value>");
+        xml.append("<string>");
+        xml.append(userId);
+        xml.append("</string>");
         xml.append("</value>");
         xml.append("</param>");
         xml.append("</params>");

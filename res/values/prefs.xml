@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="key_space_id">KEY_SPACE_ID</string>
+    <string name="key_user_id">KEY_USER_ID</string>
+    <string name="key_user_id_int">KEY_USER_ID_INT</string>
+    <string name="key_password">KEY_PASSWORD</string>
+
+    <string name="prefs_title">設定登録</string>
+    <string name="prefs_space_id">スペースID</string>
+    <string name="prefs_user_id">ユーザID</string>
+    <string name="prefs_password">パスワード</string>
+    <string name="prefs_backlog_domain">.backlog.jp</string>
+    <string name="prefs_need_register">始めにアカウント情報を登録してください。</string>
+
+</resources>

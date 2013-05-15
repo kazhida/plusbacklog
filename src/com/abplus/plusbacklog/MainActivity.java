@@ -38,9 +38,6 @@ public class MainActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            setTheme(R.style.app_theme);
-        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
