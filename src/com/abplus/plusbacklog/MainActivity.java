@@ -129,10 +129,16 @@ public class MainActivity extends Activity {
         } else {
             BackLogCache cache = BackLogCache.sharedInstance();
 
-            if (cache == null || !spaceId.equals(cache.spaceId()) || !userId.equals(cache.userId())) {
+            if (cache == null ||
+                    ! spaceId.equals(cache.spaceId()) ||
+                    ! userId.equals(cache.userId()) ||
+                    ! password.equals(cache.password())) {
                 cache = BackLogCache.initSharedInstance(this, new BacklogIO(spaceId, userId, password));
             }
-            resetCache(spaceId, userId, password);
+            project = null;
+            component = null;
+            issueType = null;
+            loadProjects();
 
             cache.getUserIcon(userId, new BackLogCache.CacheResponseNotify() {
                 @Override
@@ -191,10 +197,6 @@ public class MainActivity extends Activity {
 
             FrameLayout frame = (FrameLayout)findViewById(R.id.ad_frame);
             frame.addView(result);
-
-            AdRequest adRequest = new AdRequest();
-
-            result.loadAd(adRequest);
         }
 
         return result;
@@ -442,14 +444,6 @@ public class MainActivity extends Activity {
             ProgressDialog waitDialog = showWait(getString(R.string.loading));
             loadIssueTypes(waitDialog, project);
         }
-    }
-
-    private void resetCache(String space_id, String user_id, String password) {
-        BackLogCache.initSharedInstance(this, new BacklogIO(space_id, user_id, password));
-        project = null;
-        component = null;
-        issueType = null;
-        loadProjects();
     }
 
     private String getEntryText(int id) {

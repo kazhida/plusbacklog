@@ -102,6 +102,10 @@ public class BackLogCache {
         return backlogIO.getUserId();
     }
 
+    public String password() {
+        return backlogIO.getPassword();
+    }
+
     /**
      * @return  ユーザIDプロパティ(数値)
      */
