@@ -29,12 +29,13 @@ import java.util.Map;
  * Created: 2013/05/08 11:47
  */
 public class BackLogCache {
-    private TimeLine timeLine = null;
-    private Comments comments = null;
-    private Issue issue = null;
+    private Projects projects = new Projects();
+    private Map<String, IssueTypes> issueTypesMap = new HashMap<String, IssueTypes>();
+    private Map<String, Components> componentsMap = new HashMap<String, Components>();
     private User user = new User();
     private Map<String, Drawable> icons = new HashMap<String, Drawable>();
     private BacklogIO backlogIO;
+    private LayoutInflater inflater;
     private Context context;
     private Handler handler = new Handler();
 
@@ -60,6 +61,7 @@ public class BackLogCache {
     }
 
     private BackLogCache(Activity activity, BacklogIO io) {
+        inflater = activity.getLayoutInflater();
         context = activity;
         backlogIO = io;
     }
@@ -119,18 +121,6 @@ public class BackLogCache {
         return backlogIO;
     }
 
-    public TimeLine getTimeLine() {
-        return timeLine;
-    }
-
-    public Comments getComments() {
-        return comments;
-    }
-
-    public Issue getIssue() {
-        return issue;
-    }
-
     private abstract class Responder implements BacklogIO.ResponseNotify {
         CacheResponseNotify notify;
 
@@ -149,6 +139,41 @@ public class BackLogCache {
         }
     }
 
+    private abstract class AdapterResponder extends Responder {
+        RootParseable parseable;
+
+        AdapterResponder(RootParseable parseable, CacheResponseNotify notify) {
+            super(notify);
+            this.parseable = parseable;
+        }
+
+        abstract BaseAdapter getAdapter();
+
+        @Override
+        public void success(int code, final String response) {
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        parseable.parse(response);
+                        handler.post(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                notify.success(getAdapter());
+                            }
+                        });
+                    } catch (IOException e) {
+                        notify.error(e);
+                    } catch (XmlPullParserException e) {
+                        notify.error(e);
+                    }
+                }
+            }).start();
+        }
+    }
+
     /**
      * ユーザアイコンの取得
      * @param userId    ユーザID
@@ -161,6 +186,7 @@ public class BackLogCache {
             notify.success(drawable);
         } else {
             backlogIO.getUserIcon(userId, new Responder(notify) {
+
                 @Override
                 public void success(int code, final String response) {
                     new Thread(new Runnable() {
@@ -214,5 +240,56 @@ public class BackLogCache {
         }
 
         return drawable;
+    }
+
+    public void getProjects(CacheResponseNotify notify) {
+        if (projects.count() > 0) {
+            notify.success(new ProjectsAdapter(inflater, projects));
+        } else {
+            backlogIO.getProjects(new AdapterResponder(projects, notify) {
+                @Override
+                BaseAdapter getAdapter() {
+                    return new ProjectsAdapter(inflater, projects);
+                }
+            });
+        }
+    }
+
+    public void getIssueTypes(Projects.Project project, CacheResponseNotify notify) {
+        if (project == null) {
+            notify.success((BaseAdapter) null);
+        } else if (issueTypesMap.containsKey(project.getKey())) {
+            notify.success(new IssueTypesAdapter(inflater, issueTypesMap.get(project.getKey())));
+        } else {
+            final IssueTypes issueTypes = new IssueTypes();
+            issueTypesMap.put(project.getKey(), issueTypes);
+
+            backlogIO.getIssueTypes(project.getId(), new AdapterResponder(issueTypes, notify) {
+
+                @Override
+                BaseAdapter getAdapter() {
+                    return new IssueTypesAdapter(inflater, issueTypes);
+                }
+            });
+        }
+    }
+
+    public void getComponents(Projects.Project project, CacheResponseNotify notify) {
+        if (project == null) {
+            notify.success((BaseAdapter) null);
+        } else if (componentsMap.containsKey(project.getKey())) {
+            notify.success(new ComponentsAdapter(context, inflater, componentsMap.get(project.getKey())));
+        } else {
+            final Components components = new Components();
+            componentsMap.put(project.getKey(), components);
+
+            backlogIO.getComponents(project.getId(), new AdapterResponder(components, notify) {
+
+                @Override
+                BaseAdapter getAdapter() {
+                    return new ComponentsAdapter(context, inflater, components);
+                }
+            });
+        }
     }
 }

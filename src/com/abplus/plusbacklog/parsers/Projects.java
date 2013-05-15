@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class Projects implements BackLogCache.RootParseable {
 
-    List<Project> projects = new ArrayList<Project>();
+    private List<Project> projects = new ArrayList<Project>();
 
     public class Project implements BacklogIO.IdHolder, BacklogIO.NameHolder, BacklogIO.KeyHolder {
         private int id;
@@ -48,9 +48,15 @@ public class Projects implements BackLogCache.RootParseable {
         public boolean isArchived() {
             return archived;
         }
-
     }
 
+    public int count() {
+        return projects.size();
+    }
+
+    public Project get(int index) {
+        return projects.get(index);
+    }
 
     @Override
     public void parse(String response) throws IOException, XmlPullParserException {

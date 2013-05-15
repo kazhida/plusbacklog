@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
@@ -12,6 +12,9 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import com.abplus.plusbacklog.parsers.Components;
+import com.abplus.plusbacklog.parsers.IssueTypes;
+import com.abplus.plusbacklog.parsers.Projects;
 import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
@@ -21,11 +24,9 @@ import java.util.List;
 
 public class MainActivity extends Activity {
 
-    private BacklogIO                backlog = null;
-    private SelectionCache           cache = null;
-    private SelectionCache.Project   project = null;
-    private SelectionCache.IssueType issueType = null;
-    private SelectionCache.Component component = null;
+    private Projects.Project         project = null;
+    private IssueTypes.IssueType     issueType = null;
+    private Components.Component     component = null;
     private PriorityAdapter.Priority priority = null;
     private String                   savedKey = null;
     private AdView                   adView = null;
@@ -144,9 +145,11 @@ public class MainActivity extends Activity {
                 String description = getEntryText(R.id.description);
                 if (summary == null || summary.isEmpty()) {
                     showToast(R.string.summary_is_empty);
-                } else if (backlog != null) {
+                } else  {
                     final ProgressDialog waitDialog = showWait(getString(R.string.sending));
-                    backlog.createIssue(summary, description,
+                    BackLogCache cache = BackLogCache.sharedInstance();
+
+                    cache.getIO().createIssue(summary, description,
                             project, issueType, component, priority, new BacklogIO.ResponseNotify() {
                         @Override
                         public void success(int code, String response) {
@@ -156,11 +159,13 @@ public class MainActivity extends Activity {
                             setEntryText(R.id.description, null);
                             showToast(R.string.registered_issue);
                         }
+
                         @Override
                         public void failed(int code, String response) {
                             waitDialog.dismiss();
                             showError(R.string.cant_register, "Error STATUS=" + code);
                         }
+
                         @Override
                         public void error(Exception e) {
                             waitDialog.dismiss();
@@ -213,10 +218,6 @@ public class MainActivity extends Activity {
         Toast.makeText(this, msg_id, duration).show();
     }
 
-//    private void showToast(String msg) {
-//        showToast(msg, Toast.LENGTH_SHORT);
-//    }
-
     private void showToast(int msg_id) {
         showToast(msg_id, Toast.LENGTH_SHORT);
     }
@@ -234,106 +235,135 @@ public class MainActivity extends Activity {
     }
 
     private void loadProjects() {
-        if (cache != null) {
-            final String key = project != null ? project.getKey() : savedKey;
-            findViewById(R.id.project_spinner).setVisibility(View.GONE);
-            findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
-            final ProgressDialog waitDialog = showWait(getString(R.string.loading));
-            cache.loadProjects(new BacklogIO.ResponseNotify() {
-                @Override
-                public void success(int code, String response) {
-                    waitDialog.dismiss();
-                    SelectionCache.ProjectsAdapter adapter = cache.getProjectsAdapter();
-                    setSpinnerAdapter(R.id.project_spinner, adapter, adapter.keyIndexOf(key));
-                    showSpinner(R.id.project_spinner);
-                }
-                @Override
-                public void failed(int code, String response) {
-                    waitDialog.dismiss();
-                    showError(R.string.cant_load, "Error STATUS=" + code);
-                }
-                @Override
-                public void error(Exception e) {
-                    waitDialog.dismiss();
-                    showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
-                }
-            });
-        }
+        final String key = project != null ? project.getKey() : savedKey;
+
+        BackLogCache cache = BackLogCache.sharedInstance();
+        findViewById(R.id.project_spinner).setVisibility(View.GONE);
+        findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
+
+        final ProgressDialog waitDialog = showWait(getString(R.string.loading));
+        cache.getProjects(new BackLogCache.CacheResponseNotify() {
+
+            @Override
+            public void success(int code, String response) {
+                waitDialog.dismiss();
+                //  ここには来ないはず
+            }
+
+            @Override
+            public void failed(int code, String response) {
+                waitDialog.dismiss();
+                showError(R.string.cant_load, "Error STATUS=" + code);
+            }
+
+            @Override
+            public void error(Exception e) {
+                waitDialog.dismiss();
+                showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
+            }
+
+            @Override
+            public void success(BaseAdapter adapter) {
+                waitDialog.dismiss();
+                ProjectsAdapter projectsAdapter = (ProjectsAdapter)adapter;
+                setSpinnerAdapter(R.id.project_spinner, adapter, projectsAdapter.keyIndexOf(key));
+                showSpinner(R.id.project_spinner);
+            }
+
+            @Override
+            public void success(Drawable icon) {
+                waitDialog.dismiss();
+                //  ここには来ないはず
+            }
+        });
+    }
+
+    private void loadIssueTypes(final ProgressDialog waitDialog, final Projects.Project project) {
+        BackLogCache cache = BackLogCache.sharedInstance();
+
+        cache.getIssueTypes(project, new BackLogCache.CacheResponseNotify() {
+            @Override
+            public void success(BaseAdapter adapter) {
+                setSpinnerAdapter(R.id.issue_type_spinner, adapter, 0);
+                loadComponents(waitDialog, project);
+            }
+
+            @Override
+            public void success(Drawable icon) {
+                waitDialog.dismiss();
+                //  ここには来ないはず
+            }
+
+            @Override
+            public void success(int code, String response) {
+                waitDialog.dismiss();
+                //  ここには来ないはず
+            }
+
+            @Override
+            public void failed(int code, String response) {
+                waitDialog.dismiss();
+                showError(R.string.cant_load, "Error STATUS=" + code);
+            }
+
+            @Override
+            public void error(Exception e) {
+                waitDialog.dismiss();
+                showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
+            }
+        });
+    }
+
+    private void loadComponents(final ProgressDialog waitDialog, final Projects.Project project) {
+        BackLogCache cache = BackLogCache.sharedInstance();
+
+        cache.getComponents(project, new BackLogCache.CacheResponseNotify() {
+            @Override
+            public void success(BaseAdapter adapter) {
+                setSpinnerAdapter(R.id.component_spinner, adapter, 0);
+                waitDialog.dismiss();
+                showSpinner(R.id.issue_attribute_panel);
+            }
+
+            @Override
+            public void success(Drawable icon) {
+                waitDialog.dismiss();
+                //  ここには来ないはず
+            }
+
+            @Override
+            public void success(int code, String response) {
+                waitDialog.dismiss();
+                //  ここには来ないはず
+            }
+
+            @Override
+            public void failed(int code, String response) {
+                waitDialog.dismiss();
+                showError(R.string.cant_load, "Error STATUS=" + code);
+            }
+
+            @Override
+            public void error(Exception e) {
+                waitDialog.dismiss();
+                showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
+            }
+        });
     }
 
     private void loadAttributes() {
-        if (cache != null && project != null) {
-            if (project.hasCache()) {
-                findViewById(R.id.issue_attribute_panel).setVisibility(View.VISIBLE);
-                setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypesAdapter(project), 0);
-            } else {
-                findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
-                final ProgressDialog waitDialog = showWait(getString(R.string.loading));
-                final boolean[] flags = new boolean[2];
-                flags[0] = false;
-                flags[1] = false;
-                cache.loadIssueTypes(project, new BacklogIO.ResponseNotify() {
-                    @Override
-                    public void success(int code, String response) {
-                        flags[0] = true;
-                        setSpinnerAdapter(R.id.issue_type_spinner, cache.getIssueTypesAdapter(project), 0);
-                        if (flags[0] && flags[1]) {
-                            waitDialog.dismiss();
-                            showSpinner(R.id.issue_attribute_panel);
-                        }
-                    }
-                    @Override
-                    public void failed(int code, String response) {
-                        flags[0] = true;
-                        if (flags[0] && flags[1]) {
-                            waitDialog.dismiss();
-                        }
-                        showError(R.string.cant_load, "Error STATUS=" + code);
-                    }
-                    @Override
-                    public void error(Exception e) {
-                        flags[0] = true;
-                        if (flags[0] && flags[1]) {
-                            waitDialog.dismiss();
-                        }
-                        showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
-                    }
-                });
-                cache.loadComponents(project, new BacklogIO.ResponseNotify() {
-                    @Override
-                    public void success(int code, String response) {
-                        flags[1] = true;
-                        setSpinnerAdapter(R.id.component_spinner, cache.getComponentsAdapter(project), 0);
-                        if (flags[0] && flags[1]) {
-                            waitDialog.dismiss();
-                            showSpinner(R.id.issue_attribute_panel);
-                        }
-                    }
-                    @Override
-                    public void failed(int code, String response) {
-                        flags[1] = true;
-                        if (flags[0] && flags[1]) {
-                            waitDialog.dismiss();
-                        }
-                        showError(R.string.cant_load, "Error STATUS=" + code);
-                    }
-                    @Override
-                    public void error(Exception e) {
-                        flags[1] = true;
-                        if (flags[0] && flags[1]) {
-                            waitDialog.dismiss();
-                        }
-                        showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
-                    }
-                });
-            }
+        if (project != null) {
+            findViewById(R.id.issue_attribute_panel).setVisibility(View.GONE);
+            ProgressDialog waitDialog = showWait(getString(R.string.loading));
+            loadIssueTypes(waitDialog, project);
         }
     }
 
     private void resetCache(String space_id, String user_id, String password) {
-        backlog = new BacklogIO(space_id, user_id, password);
-        cache = new SelectionCache(this, backlog);
+        BackLogCache.initSharedInstance(this, new BacklogIO(space_id, user_id, password));
         project = null;
+        component = null;
+        issueType = null;
         loadProjects();
     }
 
@@ -466,7 +496,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            project = (SelectionCache.Project)view.getTag();
+            project = (Projects.Project)view.getTag();
             savedKey = project.getKey();
             loadAttributes();
         }
@@ -482,7 +512,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            issueType = (SelectionCache.IssueType)view.getTag();
+            issueType = (IssueTypes.IssueType)view.getTag();
         }
 
         @Override
@@ -494,7 +524,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            component = (SelectionCache.Component)view.getTag();
+            component = (Components.Component)view.getTag();
         }
 
         @Override

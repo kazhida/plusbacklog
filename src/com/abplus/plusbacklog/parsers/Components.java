@@ -12,23 +12,37 @@ import java.util.List;
  * Copyright (C) 2013 ABplus Inc. kazhida
  * All rights reserved.
  * Author:  kazhida
- * Created: 2013/05/09 9:36
+ * Created: 2013/05/15 10:27
  */
-public class Users implements BackLogCache.RootParseable {
-    List<User> users = new ArrayList<User>();
+public class Components implements BackLogCache.RootParseable {
+
+    private List<Component> components = new ArrayList<Component>();
+
+    public class Component extends IdNamePair {
+        //  実質的にはエイリアス
+    }
+
+    public int count() {
+        return components.size();
+    }
+
+    public Component get(int index) {
+        return components.get(index);
+    }
 
     @Override
     public void parse(String response) throws IOException, XmlPullParserException {
-        new UsersParser().parse(response);
+        components.clear();
+        new ComponentsParser().parse(response);
     }
 
-    private class UsersParser extends StructParser {
+    private class ComponentsParser extends StructParser {
 
         @Override
         public void parseStruct(XmlPullParser xpp) throws IOException, XmlPullParserException {
-            User user = new User();
-            user.parse(xpp);
-            users.add(user);
+            Component component = new Component();
+            component.parse(xpp);
+            components.add(component);
         }
 
         @Override
@@ -37,12 +51,12 @@ public class Users implements BackLogCache.RootParseable {
         }
 
         @Override
-        protected void parseValueEndTag(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
+        protected void parseValueText(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
             //  ここにはこない。
         }
 
         @Override
-        protected void parseValueText(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
+        protected void parseValueEndTag(String name, XmlPullParser xpp) throws IOException, XmlPullParserException {
             //  ここにはこない。
         }
     }
