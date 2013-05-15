@@ -38,6 +38,7 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.main);
 
         adView = appendAdView();
@@ -65,7 +66,7 @@ public class MainActivity extends Activity {
         noPrefs = false;
         savedKey = prefs.getString(getString(R.string.key_project), null);
 
-        if (spaceId == null || userId == null || password == null) {
+        if (spaceId.length() == 0 || userId.length() == 0 || password.length() == 0) {
             noPrefs = true;
         } else if (findViewById(R.id.project_spinner).getVisibility() == View.GONE) {
             switch (prefs.getInt(getString(R.string.key_no_ad), 0)) {
@@ -121,11 +122,45 @@ public class MainActivity extends Activity {
         showInit(spaceId, userId, password);
     }
 
+
     private void showInit(String spaceId, String userId, String password) {
         if (noPrefs) {
             showPreferences();
         } else {
+            BackLogCache cache = BackLogCache.sharedInstance();
+
+            if (cache == null || !spaceId.equals(cache.spaceId()) || !userId.equals(cache.userId())) {
+                cache = BackLogCache.initSharedInstance(this, new BacklogIO(spaceId, userId, password));
+            }
             resetCache(spaceId, userId, password);
+
+            cache.getUserIcon(userId, new BackLogCache.CacheResponseNotify() {
+                @Override
+                public void success(BaseAdapter adapter) {
+                    //  なにもしない
+                }
+
+                @Override
+                public void success(Drawable icon) {
+                    ImageView view = (ImageView)findViewById(R.id.icon);
+                    view.setImageDrawable(icon);
+                }
+
+                @Override
+                public void success(int code, String response) {
+                    //  なにもしない
+                }
+
+                @Override
+                public void failed(int code, String response) {
+                    showError(R.string.cant_load, "ERROR STATUS = " + code);
+                }
+
+                @Override
+                public void error(Exception e) {
+                    showError(R.string.cant_load, e.getLocalizedMessage());
+                }
+            });
         }
     }
 
