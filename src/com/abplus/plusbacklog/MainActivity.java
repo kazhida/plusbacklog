@@ -3,15 +3,17 @@ package com.abplus.plusbacklog;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.*;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import com.abplus.plusbacklog.billing.BillingHelper;
 import com.abplus.plusbacklog.parsers.Components;
 import com.abplus.plusbacklog.parsers.IssueTypes;
 import com.abplus.plusbacklog.parsers.Projects;
@@ -30,12 +32,8 @@ public class MainActivity extends Activity {
     private PriorityAdapter.Priority priority = null;
     private String                   savedKey = null;
     private AdView                   adView = null;
-
-    private final String PREF_NAME    = "backlog_prefs";
-    private final String KEY_SPACE_ID = "space_id";
-    private final String KEY_USER_ID  = "user_id";
-    private final String KEY_PASSWORD = "password";
-    private final String KEY_PROJECT  = "curr_project";
+    private boolean                  noPrefs = true;
+    private BillingHelper            billingHelper = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -52,30 +50,93 @@ public class MainActivity extends Activity {
         setSpinnerListener(R.id.component_spinner, new ComponentSelectedListener());
         setSpinnerListener(R.id.priority_spinner, new PrioritySelectedListener());
         setSpinnerAdapter(R.id.priority_spinner, new PriorityAdapter(), 1);
-
-        findViewById(R.id.save_config).setOnClickListener(new SaveConfigListener());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
-        String space_id = prefs.getString(KEY_SPACE_ID, null);
-        String user_id = prefs.getString(KEY_USER_ID, null);
-        String password = prefs.getString(KEY_PASSWORD, null);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final String spaceId = prefs.getString(getString(R.string.key_space_id), "");
+        final String userId = prefs.getString(getString(R.string.key_user_id), "");
+        final String password = prefs.getString(getString(R.string.key_password), "");
 
-        savedKey = prefs.getString(KEY_PROJECT, null);
+        boolean checkInventory = false;
+        noPrefs = false;
+        savedKey = prefs.getString(getString(R.string.key_project), null);
 
-        if (space_id == null || user_id == null || password == null) {
-            showConfig();
+        if (spaceId == null || userId == null || password == null) {
+            noPrefs = true;
         } else if (findViewById(R.id.project_spinner).getVisibility() == View.GONE) {
-            //  プロジェクトを読み込む
-            setEntryText(R.id.space_id, space_id);
-            setEntryText(R.id.user_id, user_id);
-            setEntryText(R.id.password, password);
-            resetCache(space_id, user_id, password);
+            switch (prefs.getInt(getString(R.string.key_no_ad), 0)) {
+                case 0:
+                    //  確認
+                    checkInventory = true;
+                    break;
+                case 1:
+                    //  adView非表示
+                    hideAd();
+                    break;
+                default:
+                    //  adView表示
+                    showAd();
+                    break;
+            }
         }
+        //  広告関連の処理
+        final boolean needQuery = checkInventory;
+        final String DEBUG_TAG = "+backlog.no_ad.billing";
+
+        if (billingHelper == null) {
+            billingHelper = new BillingHelper(this);
+            Log.d(DEBUG_TAG, "Setup start.");
+            billingHelper.startSetup(new BillingHelper.OnSetupFinishedListener() {
+                @Override
+                public void onSetupFinished(BillingHelper.Result result) {
+                    Log.d(DEBUG_TAG, "Setup finished.");
+
+                    if (result.isFailure()) {
+                        Log.d(DEBUG_TAG, "Setup failed.");
+                    } else if (needQuery) {
+                        Log.d(DEBUG_TAG, "Setup successful. Querying inventory.");
+                        try {
+                            BillingHelper.Inventory inventory = billingHelper.queryInventory(false);
+                            Log.d(DEBUG_TAG, "Query inventory was successful.");
+                            boolean no_ad = inventory.hasPurchase(getString(R.string.sku_no_ad));
+                            if (no_ad) {
+                                billingHelper.savePurchaseForNoAd(1);
+                                hideAd();
+                            } else {
+                                billingHelper.savePurchaseForNoAd(-1);
+                                showAd();
+                            }
+                        } catch (BillingHelper.BillingException e) {
+                            billingHelper.savePurchaseForNoAd(-1);
+                            showAd();
+                        }
+                    }
+                }
+            });
+        }
+        showInit(spaceId, userId, password);
+    }
+
+    private void showInit(String spaceId, String userId, String password) {
+        if (noPrefs) {
+            showPreferences();
+        } else {
+            resetCache(spaceId, userId, password);
+        }
+    }
+
+    private void showAd() {
+        adView.setVisibility(View.VISIBLE);
+        adView.loadAd(new AdRequest());
+    }
+
+    private void hideAd() {
+        adView.stopLoading();
+        adView.setVisibility(View.GONE);
     }
 
     /**
@@ -116,9 +177,9 @@ public class MainActivity extends Activity {
         super.onPause();
 
         if (project != null) {
-            SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(KEY_PROJECT, project.getKey());
+            editor.putString(getString(R.string.key_project), savedKey);
             editor.commit();
         }
     }
@@ -135,7 +196,7 @@ public class MainActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()){
             case R.id.menu_config:
-                showConfig();
+                showPreferences();
                 return true;
             case R.id.menu_reload:
                 loadProjects();
@@ -157,6 +218,10 @@ public class MainActivity extends Activity {
                             Log.d("+backlog.post_issue", response);
                             setEntryText(R.id.summary, null);
                             setEntryText(R.id.description, null);
+
+                            InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                            manager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+
                             showToast(R.string.registered_issue);
                         }
 
@@ -178,27 +243,12 @@ public class MainActivity extends Activity {
         return false;
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            View view = findViewById(R.id.config_panel);
-            if (view.getVisibility() == View.VISIBLE) {
-                view.setVisibility(View.GONE);
-                findViewById(R.id.main_panel).setVisibility(View.VISIBLE);
-                return true;
-            }
-        }
-        return super.onKeyDown(keyCode, event);
-    }
+    private void showPreferences() {
+        Intent intent = new Intent(this, PrefsActivity.class);
 
-    private void showConfig() {
-        //  1秒かけてぼや〜んとでる。
-        View view = findViewById(R.id.config_panel);
-        view.setVisibility(View.VISIBLE);
-        AlphaAnimation animation = new AlphaAnimation(0.0f, 1.0f);
-        animation.setDuration(1000);
-        view.startAnimation(animation);
-        findViewById(R.id.main_panel).setVisibility(View.GONE);
+        intent.setAction(Intent.ACTION_VIEW);
+
+        startActivity(intent);
     }
 
     private void showSpinner(int id) {
@@ -390,46 +440,6 @@ public class MainActivity extends Activity {
     private void setSpinnerListener(int spinner_id, AdapterView.OnItemSelectedListener listener) {
         Spinner spinner = (Spinner)findViewById(spinner_id);
         spinner.setOnItemSelectedListener(listener);
-    }
-
-    private class SaveConfigListener implements View.OnClickListener {
-
-        private String getText(int id) {
-            EditText edit = (EditText)findViewById(id);
-            return edit.getText().toString();
-        }
-
-        private String spaceId() {
-            return getText(R.id.space_id);
-        }
-
-        private String userId() {
-            return getText(R.id.user_id);
-        }
-
-        private String password() {
-            return getText(R.id.password);
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (getCurrentFocus() != null) {
-                InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                manager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-            }
-
-            findViewById(R.id.config_panel).setVisibility(View.GONE);
-            findViewById(R.id.main_panel).setVisibility(View.VISIBLE);
-
-            SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(KEY_SPACE_ID, spaceId());
-            editor.putString(KEY_USER_ID, userId());
-            editor.putString(KEY_PASSWORD, password());
-            editor.commit();
-
-            resetCache(spaceId(), userId(), password());
-        }
     }
 
     private class PriorityAdapter extends BaseAdapter {

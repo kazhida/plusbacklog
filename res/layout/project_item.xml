@@ -29,5 +29,6 @@
             android:layout_height="wrap_content"
             android:text="@string/dummy_project_name"
             android:textSize="6pt"
+            android:visibility="gone"
             />
 </LinearLayout>

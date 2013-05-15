@@ -55,7 +55,7 @@ public class PrefsActivity extends Activity {
 
     private void launchPurchase() {
         final View button = findViewById(R.id.billing_no_ad);
-        int requestCode = 11021;    //適当な値
+        int requestCode = 12021;    //適当な値
 
         button.setEnabled(false);
 

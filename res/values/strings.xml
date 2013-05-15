@@ -9,6 +9,7 @@
     <string name="password">パスワード</string>
     <string name="register">登録</string>
     <string name="need_register">最初に、アカウント情報を登録してください</string>
+    <string name="icon">アイコン</string>
 
     <string name="config">設定</string>
     <string name="reload">リロード</string>
@@ -30,6 +31,7 @@
     <string name="dummy_project_key">ABC1234</string>
     <string name="dummy_project_name">Project 1234</string>
 
+    <string name="key_project">KEY_PROJECT</string>
     <string name="key_no_ad">KEY_NO_AD</string>
     <string name="sku_no_ad">no_ad</string>
 
