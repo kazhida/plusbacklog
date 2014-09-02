@@ -228,6 +228,26 @@ public class BacklogIO {
         post(xml.toString(), notify);
     }
 
+    public void getUsers(int projectId, ResponseNotify notify) {
+        StringBuilder xml = new StringBuilder();
+
+        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        xml.append("<methodCall>");
+        xml.append("<methodName>backlog.getUsers</methodName>");
+        xml.append("<params>");
+        xml.append("<param>");
+        xml.append("<value>");
+        xml.append("<int>");
+        xml.append(projectId);
+        xml.append("</int>");
+        xml.append("</value>");
+        xml.append("</param>");
+        xml.append("</params>");
+        xml.append("</methodCall>");
+
+        post(xml.toString(), notify);
+    }
+
     public void getUserIcon(String userId, ResponseNotify notify) {
         StringBuilder xml = new StringBuilder();
 

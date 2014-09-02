@@ -44,7 +44,7 @@ public class IssueTypesAdapter extends BaseAdapter {
         TextView result = (TextView)convertView;
 
         if (result == null) {
-            result = (TextView)inflater.inflate(R.layout.spinner_item, null);
+            result = (TextView)inflater.inflate(R.layout.spinner_item, parent, false);
         }
         IssueTypes.IssueType issueType = issueTypes.get(position);
         result.setText(issueType.getName());

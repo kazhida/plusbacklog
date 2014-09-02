@@ -32,6 +32,7 @@ public class BackLogCache {
     private Projects projects = new Projects();
     private Map<String, IssueTypes> issueTypesMap = new HashMap<String, IssueTypes>();
     private Map<String, Components> componentsMap = new HashMap<String, Components>();
+    private Map<String, Users>      usersMap      = new HashMap<String, Users>();
     private User user = new User();
     private Map<String, Drawable> icons = new HashMap<String, Drawable>();
     private BacklogIO backlogIO;
@@ -292,6 +293,25 @@ public class BackLogCache {
                 @Override
                 BaseAdapter getAdapter() {
                     return new ComponentsAdapter(context, inflater, components);
+                }
+            });
+        }
+    }
+
+    public void getUsers(Projects.Project project, CacheResponseNotify notify) {
+        if (project == null) {
+            notify.success((BaseAdapter) null);
+        } else if (usersMap.containsKey(project.getKey())) {
+            notify.success(new UsersAdapter(context, inflater, usersMap.get(project.getKey())));
+        } else {
+            final Users users = new Users();
+            usersMap.put(project.getKey(), users);
+
+            backlogIO.getUsers(project.getId(), new AdapterResponder(users, notify) {
+
+                @Override
+                BaseAdapter getAdapter() {
+                    return new UsersAdapter(context, inflater, users);
                 }
             });
         }

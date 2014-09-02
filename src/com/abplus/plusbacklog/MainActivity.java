@@ -17,6 +17,7 @@ import com.abplus.plusbacklog.billing.BillingHelper;
 import com.abplus.plusbacklog.parsers.Components;
 import com.abplus.plusbacklog.parsers.IssueTypes;
 import com.abplus.plusbacklog.parsers.Projects;
+import com.abplus.plusbacklog.parsers.Users;
 import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
@@ -30,6 +31,7 @@ public class MainActivity extends Activity {
     private IssueTypes.IssueType     issueType = null;
     private Components.Component     component = null;
     private PriorityAdapter.Priority priority = null;
+    private Users.User               user = null;
     private String                   savedKey = null;
     private AdView                   adView = null;
     private boolean                  noPrefs = true;
@@ -51,6 +53,7 @@ public class MainActivity extends Activity {
         setSpinnerListener(R.id.component_spinner, new ComponentSelectedListener());
         setSpinnerListener(R.id.priority_spinner, new PrioritySelectedListener());
         setSpinnerAdapter(R.id.priority_spinner, new PriorityAdapter(), 1);
+        setSpinnerListener(R.id.user_spinner, new UserSelectedListener());
     }
 
     @Override
@@ -256,8 +259,10 @@ public class MainActivity extends Activity {
                             setEntryText(R.id.summary, null);
                             setEntryText(R.id.description, null);
 
-                            InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            manager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                            if (getCurrentFocus() != null) {
+                                InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                                manager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                            }
 
                             showToast(R.string.registered_issue);
                         }
@@ -409,6 +414,44 @@ public class MainActivity extends Activity {
             public void success(BaseAdapter adapter) {
                 setSpinnerAdapter(R.id.component_spinner, adapter, 0);
                 waitDialog.dismiss();
+//                showSpinner(R.id.issue_attribute_panel);
+                loadUsers(waitDialog, project);
+            }
+
+            @Override
+            public void success(Drawable icon) {
+                waitDialog.dismiss();
+                //  ここには来ないはず
+            }
+
+            @Override
+            public void success(int code, String response) {
+                waitDialog.dismiss();
+                //  ここには来ないはず
+            }
+
+            @Override
+            public void failed(int code, String response) {
+                waitDialog.dismiss();
+                showError(R.string.cant_load, "Error STATUS=" + code);
+            }
+
+            @Override
+            public void error(Exception e) {
+                waitDialog.dismiss();
+                showError(R.string.cant_load, "Error: " + e.getLocalizedMessage());
+            }
+        });
+    }
+
+    private void loadUsers(final ProgressDialog waitDialog, final Projects.Project project) {
+        BackLogCache cache = BackLogCache.sharedInstance();
+
+        cache.getUsers(project, new BackLogCache.CacheResponseNotify() {
+            @Override
+            public void success(BaseAdapter adapter) {
+                setSpinnerAdapter(R.id.user_spinner, adapter, 0);
+                waitDialog.dismiss();
                 showSpinner(R.id.issue_attribute_panel);
             }
 
@@ -521,7 +564,7 @@ public class MainActivity extends Activity {
             TextView result = (TextView)convertView;
 
             if (result == null) {
-                result = (TextView)getLayoutInflater().inflate(R.layout.spinner_item, null);
+                result = (TextView)getLayoutInflater().inflate(R.layout.spinner_item, parent, false);
             }
             Priority priority = items.get(position);
             result.setText(priority.getName());
@@ -576,6 +619,18 @@ public class MainActivity extends Activity {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             priority = (PriorityAdapter.Priority)view.getTag();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+        }
+    }
+
+    private class UserSelectedListener implements AdapterView.OnItemSelectedListener {
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            user = (Users.User)view.getTag();
         }
 
         @Override

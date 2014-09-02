@@ -15,10 +15,18 @@
     <string name="reload">リロード</string>
     <string name="post">登録</string>
     <string name="save">保存</string>
+    <string name="project">プロジェクト：</string>
+    <string name="issue_type">種別：</string>
+    <string name="component">カテゴリ：</string>
+    <string name="priority">優先度：</string>
+    <string name="user">担当者：</string>
+    <string name="due_date">期限日：</string>
 
     <string name="priority_high">高</string>
     <string name="priority_middle">中</string>
     <string name="priority_low">低</string>
+
+    <string name="summary_example">○○の実装</string>
 
     <string name="cant_load">読み込めませんでした。</string>
     <string name="cant_register">登録できませんでした</string>
@@ -26,7 +34,8 @@
     <string name="sending">送信中…</string>
     <string name="loading">読込中…</string>
     <string name="summary_is_empty">件名は必須入力項目です。</string>
-    <string name="none">(カテゴリなし)</string>
+    <string name="no_component">(カテゴリなし)</string>
+    <string name="no_user">(担当者なし)</string>
 
     <string name="dummy_project_key">ABC1234</string>
     <string name="dummy_project_name">Project 1234</string>
@@ -37,32 +46,4 @@
 
     <string name="billing_no_ad">広告の除去</string>
     <string name="billing_service_unavailable">この端末ではアプリ内課金が使えません。</string>
-
-    <!--<string name="summary">Summary</string>-->
-    <!--<string name="description">Description</string>-->
-    <!--<string name="space_id">Space-ID</string>-->
-    <!--<string name="backlog_domain">.backlog.jp</string>-->
-    <!--<string name="user_id">User-ID</string>-->
-    <!--<string name="password">Password</string>-->
-    <!--<string name="register">Register</string>-->
-    <!--<string name="need_register">First, You need to register account information.</string>-->
-
-    <!--<string name="config">Config</string>-->
-    <!--<string name="reload">Reload</string>-->
-    <!--<string name="post">Post</string>-->
-
-    <!--<string name="priority_high">High</string>-->
-    <!--<string name="priority_middle">Middle</string>-->
-    <!--<string name="priority_low">Low</string>-->
-
-    <!--<string name="cant_load">Cannot load.</string>-->
-    <!--<string name="cant_register">Cannot register.</string>-->
-    <!--<string name="registered_issue">Registered an issue.</string>-->
-    <!--<string name="sending">Sending…</string>-->
-    <!--<string name="loading">Loading…</string>-->
-    <!--<string name="summary_is_empty">Summary have not to be empty.</string>-->
-    <!--<string name="none">(no component)</string>-->
-
-    <!--<string name="dummy_project_key">ABC1234</string>-->
-    <!--<string name="dummy_project_name">Project 1234</string>-->
 </resources>

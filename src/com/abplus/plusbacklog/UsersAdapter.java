@@ -6,29 +6,28 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
-import com.abplus.plusbacklog.parsers.Components;
+import com.abplus.plusbacklog.parsers.Users;
 
 /**
- * Copyright (C) 2013 ABplus Inc. kazhida
+ * Copyright (C) 2014 ABplus Inc. kazhida
  * All rights reserved.
- * Author:  kazhida
- * Created: 2013/05/15 11:11
+ * Created by kazhida on 2014/09/02.
  */
-public class ComponentsAdapter extends BaseAdapter {
+public class UsersAdapter extends BaseAdapter {
     private Context context;
     private LayoutInflater inflater;
-    private Components components;
+    private Users users;
 
-    ComponentsAdapter(Context context, LayoutInflater inflater, Components components) {
+    UsersAdapter(Context context, LayoutInflater inflater, Users users) {
         super();
         this.context = context;
         this.inflater = inflater;
-        this.components = components;
+        this.users = users;
     }
 
     @Override
     public int getCount() {
-        return components.count() + 1;
+        return users.count() + 1;
     }
 
     @Override
@@ -36,7 +35,7 @@ public class ComponentsAdapter extends BaseAdapter {
         if (position == 0) {
             return null;
         } else {
-            return components.get(position - 1);
+            return users.get(position - 1);
         }
     }
 
@@ -53,12 +52,12 @@ public class ComponentsAdapter extends BaseAdapter {
             result = (TextView)inflater.inflate(R.layout.spinner_item, parent, false);
         }
         if (position == 0) {
-            result.setText(context.getText(R.string.no_component));
+            result.setText(context.getText(R.string.no_user));
             result.setTag(null);
         } else {
-            Components.Component component = components.get(position - 1);
-            result.setText(component.getName());
-            result.setTag(component);
+            Users.User user = users.get(position - 1);
+            result.setText(user.getName());
+            result.setTag(user);
         }
 
         return result;

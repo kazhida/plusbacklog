@@ -1,5 +1,6 @@
 package com.abplus.plusbacklog;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,7 +55,7 @@ public class ProjectsAdapter extends BaseAdapter {
         LinearLayout result = (LinearLayout)convertView;
 
         if (result == null) {
-            result = (LinearLayout)inflater.inflate(R.layout.project_item, null);
+            result = (LinearLayout)inflater.inflate(R.layout.project_item, parent, false);
         }
         Projects.Project project = projects.get(position);
         TextView keyView = (TextView)result.findViewById(R.id.project_key);
@@ -63,11 +64,11 @@ public class ProjectsAdapter extends BaseAdapter {
         keyView.setText(project.getKey());
         nameView.setText(project.getName());
 
-//            if (project.isArchived()) {
-//                keyView.setTextColor(Color.LTGRAY);
-//            } else {
-//                keyView.setTextColor(Color.BLACK);
-//            }
+        if (project.isArchived()) {
+            keyView.setTextColor(Color.LTGRAY);
+        } else {
+            keyView.setTextColor(Color.BLACK);
+        }
 
         result.setTag(project);
 
