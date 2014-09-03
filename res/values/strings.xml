@@ -36,6 +36,7 @@
     <string name="summary_is_empty">件名は必須入力項目です。</string>
     <string name="no_component">(カテゴリなし)</string>
     <string name="no_user">(担当者なし)</string>
+    <string name="no_due_date">(期限なし)</string>
 
     <string name="dummy_project_key">ABC1234</string>
     <string name="dummy_project_name">Project 1234</string>

@@ -97,7 +97,7 @@
 
                 <Spinner
                         android:id="@+id/project_spinner"
-                        android:layout_width="fill_parent"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         />
             </LinearLayout>
@@ -124,7 +124,7 @@
                             android:id="@+id/issue_type_spinner"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/table_row_height"
                             />
                 </TableRow>
                 <!-- カテゴリ -->
@@ -142,7 +142,7 @@
                             android:id="@+id/component_spinner"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/table_row_height"
                             />
                 </TableRow>
                 <!-- 優先度 -->
@@ -160,7 +160,7 @@
                             android:id="@+id/priority_spinner"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/table_row_height"
                             />
                 </TableRow>
                 <!-- 担当者 -->
@@ -178,9 +178,10 @@
                             android:id="@+id/user_spinner"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/table_row_height"
                             />
                 </TableRow>
+                <!-- 期限日 -->
                 <TableRow
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -195,8 +196,21 @@
                             android:id="@+id/due_date"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="42dp"
+                            android:layout_height="@dimen/table_row_height"
+                            android:layout_marginLeft="8dp"
+                            android:gravity="center_vertical"
+                            android:text="@string/no_due_date"
+                            android:textSize="8pt"
+                            android:textColor="#000"
                             />
+                    <ImageView
+                            android:id="@+id/remove_due_date"
+                            android:src="@drawable/ic_action_navigation_cancel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginRight="8dp"
+                            android:contentDescription="@string/no_component"/>
                 </TableRow>
             </TableLayout>
         </LinearLayout>

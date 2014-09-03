@@ -66,8 +66,10 @@ public class ProjectsAdapter extends BaseAdapter {
 
         if (project.isArchived()) {
             keyView.setTextColor(Color.LTGRAY);
+            nameView.setTextColor(Color.LTGRAY);
         } else {
             keyView.setTextColor(Color.BLACK);
+            nameView.setTextColor(Color.BLACK);
         }
 
         result.setTag(project);

@@ -177,94 +177,70 @@ public class BacklogIO {
     }
 
     public void getProjects(ResponseNotify notify) {
-        StringBuilder xml = new StringBuilder();
-
-        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-        xml.append("<methodCall>");
-        xml.append("<methodName>backlog.getProjects</methodName>");
-        xml.append("<params />");
-        xml.append("</methodCall>");
-
-        post(xml.toString(), notify);
+        post(   "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                "<methodCall>" +
+                "<methodName>backlog.getProjects</methodName>" +
+                "<params />" + "</methodCall>",
+                notify);
     }
 
     public void getIssueTypes(int projectId, ResponseNotify notify) {
-        StringBuilder xml = new StringBuilder();
-
-        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-        xml.append("<methodCall>");
-        xml.append("<methodName>backlog.getIssueTypes</methodName>");
-        xml.append("<params>");
-        xml.append("<param>");
-        xml.append("<value>");
-        xml.append("<int>");
-        xml.append(projectId);
-        xml.append("</int>");
-        xml.append("</value>");
-        xml.append("</param>");
-        xml.append("</params>");
-        xml.append("</methodCall>");
-
-        post(xml.toString(), notify);
+        post(   "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                "<methodCall>" +
+                "<methodName>backlog.getIssueTypes</methodName>" +
+                "<params>" +
+                "<param>" +
+                "<value>" +
+                "<int>" + projectId + "</int>" +
+                "</value>" +
+                "</param>" +
+                "</params>" +
+                "</methodCall>",
+                notify);
     }
 
     public void getComponents(int projectId, ResponseNotify notify) {
-        StringBuilder xml = new StringBuilder();
-
-        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-        xml.append("<methodCall>");
-        xml.append("<methodName>backlog.getComponents</methodName>");
-        xml.append("<params>");
-        xml.append("<param>");
-        xml.append("<value>");
-        xml.append("<int>");
-        xml.append(projectId);
-        xml.append("</int>");
-        xml.append("</value>");
-        xml.append("</param>");
-        xml.append("</params>");
-        xml.append("</methodCall>");
-
-        post(xml.toString(), notify);
+        post(   "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                "<methodCall>" +
+                "<methodName>backlog.getComponents</methodName>" +
+                "<params>" +
+                "<param>" +
+                "<value>" +
+                "<int>" + projectId + "</int>" +
+                "</value>" +
+                "</param>" +
+                "</params>" +
+                "</methodCall>",
+                notify);
     }
 
     public void getUsers(int projectId, ResponseNotify notify) {
-        StringBuilder xml = new StringBuilder();
-
-        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-        xml.append("<methodCall>");
-        xml.append("<methodName>backlog.getUsers</methodName>");
-        xml.append("<params>");
-        xml.append("<param>");
-        xml.append("<value>");
-        xml.append("<int>");
-        xml.append(projectId);
-        xml.append("</int>");
-        xml.append("</value>");
-        xml.append("</param>");
-        xml.append("</params>");
-        xml.append("</methodCall>");
-
-        post(xml.toString(), notify);
+        post(   "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                "<methodCall>" +
+                "<methodName>backlog.getUsers</methodName>" +
+                "<params>" +
+                "<param>" +
+                "<value>" +
+                "<int>" + projectId + "</int>" +
+                "</value>" +
+                "</param>" +
+                "</params>" +
+                "</methodCall>",
+                notify);
     }
 
     public void getUserIcon(String userId, ResponseNotify notify) {
-        StringBuilder xml = new StringBuilder();
-
-        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-        xml.append("<methodCall>");
-        xml.append("<methodName>backlog.getUserIcon</methodName>");
-        xml.append("<params>");
-        xml.append("<param>");
-        xml.append("<value>");
-        xml.append("<string>");
-        xml.append(userId);
-        xml.append("</string>");
-        xml.append("</value>");
-        xml.append("</param>");
-        xml.append("</params>");
-        xml.append("</methodCall>");
-
-        post(xml.toString(), notify);
+        post(   "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                "<methodCall>" +
+                "<methodName>backlog.getUserIcon</methodName>" +
+                "<params>" +
+                "<param>" +
+                "<value>" +
+                "<string>" + userId + "</string>" +
+                "</value>" +
+                "</param>" +
+                "</params>" +
+                "</methodCall>",
+                notify);
     }
 }

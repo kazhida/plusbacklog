@@ -1,6 +1,7 @@
 package com.abplus.plusbacklog;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +23,9 @@ import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class MainActivity extends Activity {
@@ -36,6 +39,7 @@ public class MainActivity extends Activity {
     private AdView                   adView = null;
     private boolean                  noPrefs = true;
     private BillingHelper            billingHelper = null;
+    private Calendar                 dueDate = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,6 +58,20 @@ public class MainActivity extends Activity {
         setSpinnerListener(R.id.priority_spinner, new PrioritySelectedListener());
         setSpinnerAdapter(R.id.priority_spinner, new PriorityAdapter(), 1);
         setSpinnerListener(R.id.user_spinner, new UserSelectedListener());
+
+        findViewById(R.id.remove_due_date).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dueDate = null;
+                showDueDate();
+            }
+        });
+        findViewById(R.id.due_date).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickDueDate();
+            }
+        });
     }
 
     @Override
@@ -141,8 +159,9 @@ public class MainActivity extends Activity {
             project = null;
             component = null;
             issueType = null;
+            dueDate = null;
             loadProjects();
-
+            showDueDate();
             cache.getUserIcon(userId, new BackLogCache.CacheResponseNotify() {
                 @Override
                 public void success(BaseAdapter adapter) {
@@ -302,6 +321,37 @@ public class MainActivity extends Activity {
         view.startAnimation(animation);
     }
 
+    private void showDueDate() {
+        TextView dueDateText = (TextView) findViewById(R.id.due_date);
+        if (dueDate == null) {
+            dueDateText.setText(R.string.no_due_date);
+        } else {
+            DateFormat format = android.text.format.DateFormat.getDateFormat(getApplicationContext());
+            dueDateText.setText(format.format(dueDate.getTime()));
+        }
+    }
+
+    private void pickDueDate() {
+        Calendar calendar = dueDate != null ? dueDate : Calendar.getInstance();
+        int y = calendar.get(Calendar.YEAR);
+        int m = calendar.get(Calendar.MONTH);
+        int d = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                if (dueDate == null) {
+                    dueDate = Calendar.getInstance();
+                }
+                dueDate.set(Calendar.YEAR, year);
+                dueDate.set(Calendar.MONTH, monthOfYear);
+                dueDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                showDueDate();
+            }
+        }, y, m, d);
+        datePickerDialog.show();
+    }
+
     private void showToast(String msg, int duration) {
         Toast.makeText(this, msg, duration).show();
     }
@@ -414,7 +464,6 @@ public class MainActivity extends Activity {
             public void success(BaseAdapter adapter) {
                 setSpinnerAdapter(R.id.component_spinner, adapter, 0);
                 waitDialog.dismiss();
-//                showSpinner(R.id.issue_attribute_panel);
                 loadUsers(waitDialog, project);
             }
 
