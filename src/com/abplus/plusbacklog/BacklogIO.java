@@ -13,6 +13,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 /**
  * Copyright (C) 2013 ABplus Inc. kazhida
  * All rights reserved.
@@ -121,7 +124,12 @@ public class BacklogIO {
     }
 
     public void createIssue(String summary, String description,
-                            IdHolder project, IdHolder issueType, IdHolder component, IdHolder priority,
+                            IdHolder project,
+                            IdHolder issueType,
+                            IdHolder component,
+                            IdHolder priority,
+                            IdHolder user,
+                            Calendar dueDate,
                             ResponseNotify notify) {
         StringBuilder xml = new StringBuilder();
 
@@ -166,6 +174,21 @@ public class BacklogIO {
         xml.append("<name>priorityId</name>");
         xml.append("<value><int>").append(priority.getId()).append("</int></value>");
         xml.append("</member>");
+
+        if (user != null) {
+            xml.append("<member>");
+            xml.append("<name>assignerId</name>");
+            xml.append("<value><int>").append(user.getId()).append("</int></value>");
+            xml.append("</member>");
+        }
+
+        if (dueDate != null) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+            xml.append("<member>");
+            xml.append("<name>due_date</name>");
+            xml.append("<value><string>").append(format.format(dueDate.getTime())).append("</string></value>");
+            xml.append("</member>");
+        }
 
         xml.append("</struct>");
         xml.append("</value>");

@@ -1,5 +1,6 @@
 package com.abplus.plusbacklog;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
@@ -231,6 +232,7 @@ public class MainActivity extends Activity {
     }
 
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     protected void onPause() {
         super.onPause();
@@ -270,7 +272,7 @@ public class MainActivity extends Activity {
                     BackLogCache cache = BackLogCache.sharedInstance();
 
                     cache.getIO().createIssue(summary, description,
-                            project, issueType, component, priority, new BacklogIO.ResponseNotify() {
+                            project, issueType, component, priority, user, dueDate, new BacklogIO.ResponseNotify() {
                         @Override
                         public void success(int code, String response) {
                             waitDialog.dismiss();
